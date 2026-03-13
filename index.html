@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Serviço - Força Tática</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="menu">
+            <a href="#" class="active" onclick="mostrarSecao('escala')">Gerar Escala</a>
+            <a href="#" onclick="mostrarSecao('cadastro')">Cadastro de Militares</a>
+            <a href="#" onclick="mostrarSecao('configuracoes')">Configurações</a>
+        </nav>
+
+        <div class="main-layout">
+            <!-- Conteúdo Principal -->
+            <div class="content-area">
+                <!-- Seção Gerar Escala -->
+        <div id="secao-escala">
+            <h1>Gerador de Escala de Serviço</h1>
+            
+            <button class="btn-limpar-dia" onclick="limparDadosDoDia()" style="background-color: #dc3545; color: white; padding: 10px 20px; font-size: 16px; margin-bottom: 20px;">🗑️ Limpar Dados do Dia</button>
+            
+            <div class="form-section">
+                <h2>Configurações Gerais</h2>
+                <div class="form-group">
+                    <label>Data de Emissão:</label>
+                    <input type="date" id="dataEmissao">
+                </div>
+                <div class="form-group">
+                    <label>Data:</label>
+                    <input type="date" id="dataEscala">
+                </div>
+                <div class="form-group">
+                    <label>Hora Inicial:</label>
+                    <input type="time" id="horaInicial" value="13:30">
+                </div>
+                <div class="form-group">
+                    <label>Hora Final:</label>
+                    <input type="time" id="horaFinal" value="01:30">
+                </div>
+            </div>
+
+            <!-- Container de Viaturas -->
+            <div id="viaturasContainer"></div>
+            
+            <button class="btn-adicionar-viatura" onclick="adicionarViatura()">+ Adicionar Viatura</button>
+
+            <!-- Seções de Indisponibilidade -->
+            <div class="form-section">
+                <h2>INTERVALO DE ESCALA</h2>
+                <div id="militaresFolga"></div>
+                <button onclick="adicionarMilitarIndisponivel('folga')">+ Adicionar Militar</button>
+                <button onclick="adicionarRestantesFolga()">Adicionar os Restantes</button>
+                <button onclick="salvarIndisponiveis('folga')" style="margin-left: 10px;">Salvar</button>
+                <button onclick="limparIndisponiveis('folga')">Limpar</button>
+            </div>
+
+            <div class="form-section">
+                <h2>OUTROS TIPOS DE INDISPONIBILIDADE</h2>
+                
+                <!-- Abas -->
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab-button active" onclick="mostrarAba('rsp')">RSP</button>
+                        <button class="tab-button" onclick="mostrarAba('ferias')">Férias</button>
+                        <button class="tab-button" onclick="mostrarAba('le')">LE</button>
+                        <button class="tab-button" onclick="mostrarAba('ltip')">LTIP</button>
+                        <button class="tab-button" onclick="mostrarAba('lts')">LTS</button>
+                        <button class="tab-button" onclick="mostrarAba('adido')">Adido</button>
+                    </div>
+                    
+                    <!-- Conteúdo RSP -->
+                    <div id="tab-rsp" class="tab-content active">
+                        <h3>RSP (Recompensa por Serviços Prestados)</h3>
+                        <div id="militaresRsp"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('rsp')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('rsp')">Salvar RSP</button>
+                            <button onclick="limparIndisponiveis('rsp')">Limpar RSP</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo Férias -->
+                    <div id="tab-ferias" class="tab-content">
+                        <h3>Férias</h3>
+                        <div id="militaresFerias"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('ferias')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('ferias')">Salvar Férias</button>
+                            <button onclick="limparIndisponiveis('ferias')">Limpar Férias</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo LE -->
+                    <div id="tab-le" class="tab-content">
+                        <h3>LE (Licença Especial)</h3>
+                        <div id="militaresLe"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('le')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('le')">Salvar LE</button>
+                            <button onclick="limparIndisponiveis('le')">Limpar LE</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo LTIP -->
+                    <div id="tab-ltip" class="tab-content">
+                        <h3>LTIP (Licença Temporária para Interesse Particular)</h3>
+                        <div id="militaresLtip"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('ltip')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('ltip')">Salvar LTIP</button>
+                            <button onclick="limparIndisponiveis('ltip')">Limpar LTIP</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo LTS -->
+                    <div id="tab-lts" class="tab-content">
+                        <h3>LTS (Licença para Tratamento de Saúde)</h3>
+                        <div id="militaresLts"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('lts')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('lts')">Salvar LTS</button>
+                            <button onclick="limparIndisponiveis('lts')">Limpar LTS</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Conteúdo Adido -->
+                    <div id="tab-adido" class="tab-content">
+                        <h3>Adido</h3>
+                        <div id="militaresAdido"></div>
+                        <div class="tab-buttons">
+                            <button onclick="adicionarMilitarIndisponivel('adido')">+ Adicionar Militar</button>
+                            <button onclick="salvarIndisponiveis('adido')">Salvar Adido</button>
+                            <button onclick="limparIndisponiveis('adido')">Limpar Adido</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-gerar" onclick="gerarPDF()">Gerar PDF</button>
+        </div>
+            </div>
+            
+            <!-- Painel Lateral Direito - Militares Disponíveis -->
+            <aside class="sidebar-right" id="sidebar-disponiveis">
+                <div class="sidebar-header">
+                    <h2>Militares Disponíveis</h2>
+                    <span class="badge-count" id="count-disponiveis">0</span>
+                </div>
+                <div class="sidebar-content" id="lista-disponiveis">
+                    <p class="empty-message">Carregando...</p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Seção Configurações -->
+        <div id="secao-configuracoes" style="display: none;">
+            <h1>Configurações</h1>
+            
+            <div class="form-section">
+                <h2>Unidade</h2>
+                <div class="form-group">
+                    <label>Batalhão:</label>
+                    <input type="text" id="batalhaoInput" placeholder="Ex: 32º BPM">
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h2>Força Tática</h2>
+                <div class="form-group">
+                    <label>Comandante:</label>
+                    <select id="comandanteSelect">
+                        <option value="">Selecione o Comandante</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Auxiliar Pel:</label>
+                    <select id="auxiliarPelSelect">
+                        <option value="">Selecione o Auxiliar Pel</option>
+                    </select>
+                </div>
+                <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+            </div>
+        </div>
+
+        <!-- Seção Cadastro -->
+        <div id="secao-cadastro" style="display: none;">
+            <h1>Cadastro de Militares</h1>
+            
+            <div class="form-section">
+                <h2>Adicionar Novo Militar</h2>
+                <div class="form-group">
+                    <label>Nº Antiguidade:</label>
+                    <input type="number" id="numAntiguidade" placeholder="1, 2, 3..." min="1">
+                </div>
+                <div class="form-group">
+                    <label>Graduação:</label>
+                    <select id="gradCadastro">
+                        <option value="">Selecione</option>
+                        <option value="CEL">CEL</option>
+                        <option value="TC">TC</option>
+                        <option value="MAJ">MAJ</option>
+                        <option value="CAP">CAP</option>
+                        <option value="1ºTEN">1ºTEN</option>
+                        <option value="1ºSGT">1ºSGT</option>
+                        <option value="2ºSGT">2ºSGT</option>
+                        <option value="SD">SD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nome:</label>
+                    <input type="text" id="nomeCadastro" placeholder="Digite o nome de guerra">
+                </div>
+                <div class="form-group">
+                    <label>Nome Completo:</label>
+                    <input type="text" id="nomeCompletoCadastro" placeholder="Digite o nome completo">
+                </div>
+                <div class="form-group">
+                    <label>ID Funcional:</label>
+                    <input type="text" id="idfuncCadastro" placeholder="Digite o ID">
+                </div>
+                <button onclick="adicionarMilitarCadastro()">Adicionar Militar</button>
+            </div>
+
+            <div class="form-section">
+                <h2>Militares Cadastrados</h2>
+                <button class="btn-reset" onclick="resetarDados()">Resetar para Dados Padrão</button>
+                <div class="tabela-militares">
+                    <table id="tabelaMilitares">
+                        <thead>
+                            <tr>
+                                <th>Nº</th>
+                                <th>Graduação</th>
+                                <th>Nome</th>
+                                <th>Nome Completo</th>
+                                <th>ID Funcional</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaMilitares">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        function mostrarSecao(secao) {
+            document.getElementById('secao-escala').style.display = secao === 'escala' ? 'block' : 'none';
+            document.getElementById('secao-cadastro').style.display = secao === 'cadastro' ? 'block' : 'none';
+            document.getElementById('secao-configuracoes').style.display = secao === 'configuracoes' ? 'block' : 'none';
+            
+            const sidebar = document.getElementById('sidebar-disponiveis');
+            if (sidebar) {
+                sidebar.style.display = secao === 'escala' ? 'block' : 'none';
+            }
+            
+            if (secao === 'configuracoes') {
+                carregarConfiguracoes();
+            }
+            
+            if (secao === 'escala') {
+                setTimeout(() => atualizarMilitaresDisponiveis(), 100);
+            }
+            
+            document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
