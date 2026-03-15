@@ -6,6 +6,7 @@
     <title>Escala de Serviço - Força Tática</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <div class="container">
@@ -20,9 +21,14 @@
             <div class="content-area">
                 <!-- Seção Gerar Escala -->
         <div id="secao-escala">
-            <h1>Gerador de Escala de Serviço</h1>
+            <div class="header-escala">
+                <img src="sentinela.png" alt="Logo Sentinela" class="header-logo">
+                <span class="header-titulo">SENTINELA</span>
+            </div>
             
-            <button class="btn-limpar-dia" onclick="limparDadosDoDia()" style="background-color: #dc3545; color: white; padding: 10px 20px; font-size: 16px; margin-bottom: 20px;">🗑️ Limpar Dados do Dia</button>
+            <div class="toolbar-top">
+                <button class="btn-action btn-danger btn-wide" onclick="limparDadosDoDia()" title="Limpar Dados do Dia"><i data-lucide="trash-2"></i> Limpar Dados do Dia</button>
+            </div>
             
             <div class="form-section">
                 <h2>Configurações Gerais</h2>
@@ -34,14 +40,8 @@
                     <label>Data:</label>
                     <input type="date" id="dataEscala">
                 </div>
-                <div class="form-group">
-                    <label>Hora Inicial:</label>
-                    <input type="time" id="horaInicial" value="13:30">
-                </div>
-                <div class="form-group">
-                    <label>Hora Final:</label>
-                    <input type="time" id="horaFinal" value="01:30">
-                </div>
+                <input type="hidden" id="horaInicial" value="13:30">
+                <input type="hidden" id="horaFinal" value="01:30">
             </div>
 
             <!-- Container de Viaturas -->
@@ -51,12 +51,14 @@
 
             <!-- Seções de Indisponibilidade -->
             <div class="form-section">
-                <h2>INTERVALO DE ESCALA</h2>
+                <h2>INTERVALO DE ESCALA <span class="save-indicator" id="indicator-folga"></span></h2>
                 <div id="militaresFolga"></div>
-                <button onclick="adicionarMilitarIndisponivel('folga')">+ Adicionar Militar</button>
-                <button onclick="adicionarRestantesFolga()">Adicionar os Restantes</button>
-                <button onclick="salvarIndisponiveis('folga')" style="margin-left: 10px;">Salvar</button>
-                <button onclick="limparIndisponiveis('folga')">Limpar</button>
+                <div class="tab-buttons">
+                    <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('folga')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                    <button class="btn-action btn-secondary" onclick="adicionarRestantesFolga()" title="Adicionar os Restantes"><i data-lucide="users"></i></button>
+                    <button class="btn-action btn-success" onclick="salvarIndisponiveis('folga')" title="Salvar"><i data-lucide="save"></i></button>
+                    <button class="btn-action btn-danger" onclick="limparIndisponiveis('folga')" title="Limpar"><i data-lucide="trash-2"></i></button>
+                </div>
             </div>
 
             <div class="form-section">
@@ -75,67 +77,67 @@
                     
                     <!-- Conteúdo RSP -->
                     <div id="tab-rsp" class="tab-content active">
-                        <h3>RSP (Recompensa por Serviços Prestados)</h3>
+                        <h3>RSP (Recompensa por Serviços Prestados) <span class="save-indicator" id="indicator-rsp"></span></h3>
                         <div id="militaresRsp"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('rsp')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('rsp')">Salvar RSP</button>
-                            <button onclick="limparIndisponiveis('rsp')">Limpar RSP</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('rsp')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('rsp')" title="Salvar RSP"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('rsp')" title="Limpar RSP"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     
                     <!-- Conteúdo Férias -->
                     <div id="tab-ferias" class="tab-content">
-                        <h3>Férias</h3>
+                        <h3>Férias <span class="save-indicator" id="indicator-ferias"></span></h3>
                         <div id="militaresFerias"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('ferias')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('ferias')">Salvar Férias</button>
-                            <button onclick="limparIndisponiveis('ferias')">Limpar Férias</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('ferias')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('ferias')" title="Salvar Férias"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('ferias')" title="Limpar Férias"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     
                     <!-- Conteúdo LE -->
                     <div id="tab-le" class="tab-content">
-                        <h3>LE (Licença Especial)</h3>
+                        <h3>LE (Licença Especial) <span class="save-indicator" id="indicator-le"></span></h3>
                         <div id="militaresLe"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('le')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('le')">Salvar LE</button>
-                            <button onclick="limparIndisponiveis('le')">Limpar LE</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('le')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('le')" title="Salvar LE"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('le')" title="Limpar LE"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     
                     <!-- Conteúdo LTIP -->
                     <div id="tab-ltip" class="tab-content">
-                        <h3>LTIP (Licença Temporária para Interesse Particular)</h3>
+                        <h3>LTIP (Licença Temporária para Interesse Particular) <span class="save-indicator" id="indicator-ltip"></span></h3>
                         <div id="militaresLtip"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('ltip')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('ltip')">Salvar LTIP</button>
-                            <button onclick="limparIndisponiveis('ltip')">Limpar LTIP</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('ltip')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('ltip')" title="Salvar LTIP"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('ltip')" title="Limpar LTIP"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     
                     <!-- Conteúdo LTS -->
                     <div id="tab-lts" class="tab-content">
-                        <h3>LTS (Licença para Tratamento de Saúde)</h3>
+                        <h3>LTS (Licença para Tratamento de Saúde) <span class="save-indicator" id="indicator-lts"></span></h3>
                         <div id="militaresLts"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('lts')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('lts')">Salvar LTS</button>
-                            <button onclick="limparIndisponiveis('lts')">Limpar LTS</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('lts')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('lts')" title="Salvar LTS"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('lts')" title="Limpar LTS"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                     
                     <!-- Conteúdo Adido -->
                     <div id="tab-adido" class="tab-content">
-                        <h3>Adido</h3>
+                        <h3>Adido <span class="save-indicator" id="indicator-adido"></span></h3>
                         <div id="militaresAdido"></div>
                         <div class="tab-buttons">
-                            <button onclick="adicionarMilitarIndisponivel('adido')">+ Adicionar Militar</button>
-                            <button onclick="salvarIndisponiveis('adido')">Salvar Adido</button>
-                            <button onclick="limparIndisponiveis('adido')">Limpar Adido</button>
+                            <button class="btn-action btn-primary" onclick="adicionarMilitarIndisponivel('adido')" title="Adicionar Militar"><i data-lucide="user-plus"></i></button>
+                            <button class="btn-action btn-success" onclick="salvarIndisponiveis('adido')" title="Salvar Adido"><i data-lucide="save"></i></button>
+                            <button class="btn-action btn-danger" onclick="limparIndisponiveis('adido')" title="Limpar Adido"><i data-lucide="trash-2"></i></button>
                         </div>
                     </div>
                 </div>
@@ -143,22 +145,9 @@
 
             <button class="btn-gerar" onclick="gerarPDF()">Gerar PDF</button>
         </div>
-            </div>
-            
-            <!-- Painel Lateral Direito - Militares Disponíveis -->
-            <aside class="sidebar-right" id="sidebar-disponiveis">
-                <div class="sidebar-header">
-                    <h2>Militares Disponíveis</h2>
-                    <span class="badge-count" id="count-disponiveis">0</span>
-                </div>
-                <div class="sidebar-content" id="lista-disponiveis">
-                    <p class="empty-message">Carregando...</p>
-                </div>
-            </aside>
-        </div>
 
         <!-- Seção Configurações -->
-        <div id="secao-configuracoes" style="display: none;">
+        <div id="secao-configuracoes" class="secao-oculta">
             <h1>Configurações</h1>
             
             <div class="form-section">
@@ -166,6 +155,11 @@
                 <div class="form-group">
                     <label>Batalhão:</label>
                     <input type="text" id="batalhaoInput" placeholder="Ex: 32º BPM">
+                </div>
+                <div class="form-group">
+                    <label>Texto da Assinatura:</label>
+                    <input type="text" id="textoAssinaturaInput" placeholder="Ex: da Força Tática do 32º BPM">
+                    <small class="input-hint">Usado em: "Aux. Pel. [texto]" e "Rep comando [texto]"</small>
                 </div>
             </div>
             
@@ -183,12 +177,12 @@
                         <option value="">Selecione o Auxiliar Pel</option>
                     </select>
                 </div>
-                <button onclick="salvarConfiguracoes()">Salvar Configurações</button>
+                <button class="btn-action btn-success btn-wide" onclick="salvarConfiguracoes()" title="Salvar Configurações"><i data-lucide="save"></i> Salvar Configurações</button>
             </div>
         </div>
 
         <!-- Seção Cadastro -->
-        <div id="secao-cadastro" style="display: none;">
+        <div id="secao-cadastro" class="secao-oculta">
             <h1>Cadastro de Militares</h1>
             
             <div class="form-section">
@@ -223,12 +217,12 @@
                     <label>ID Funcional:</label>
                     <input type="text" id="idfuncCadastro" placeholder="Digite o ID">
                 </div>
-                <button onclick="adicionarMilitarCadastro()">Adicionar Militar</button>
+                <button class="btn-action btn-primary btn-wide" onclick="adicionarMilitarCadastro()" title="Adicionar Militar"><i data-lucide="user-plus"></i> Adicionar Militar</button>
             </div>
 
             <div class="form-section">
                 <h2>Militares Cadastrados</h2>
-                <button class="btn-reset" onclick="resetarDados()">Resetar para Dados Padrão</button>
+                <button class="btn-action btn-danger btn-wide" onclick="resetarDados()" title="Resetar para Dados Padrão"><i data-lucide="rotate-ccw"></i> Resetar para Dados Padrão</button>
                 <div class="tabela-militares">
                     <table id="tabelaMilitares">
                         <thead>
@@ -247,10 +241,31 @@
                 </div>
             </div>
         </div>
+            </div>
+            
+            <!-- Painel Lateral Direito - Militares Disponíveis -->
+            <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">
+                <span>Militares Disponíveis <span id="count-toggle"></span></span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <aside class="sidebar-right" id="sidebar-disponiveis">
+                <div class="sidebar-header">
+                    <h2>Militares Disponíveis</h2>
+                    <span class="badge-count" id="count-disponiveis">0</span>
+                </div>
+                <div class="sidebar-content" id="lista-disponiveis">
+                    <p class="empty-message">Carregando...</p>
+                </div>
+            </aside>
+        </div>
+
     </div>
+
+    <footer class="footer">SD PM Ferrão<br>Força Tática - 32º BPM CRPO/VRS</footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', () => lucide.createIcons());</script>
     <script>
         function mostrarSecao(secao) {
             document.getElementById('secao-escala').style.display = secao === 'escala' ? 'block' : 'none';
@@ -258,9 +273,23 @@
             document.getElementById('secao-configuracoes').style.display = secao === 'configuracoes' ? 'block' : 'none';
             
             const sidebar = document.getElementById('sidebar-disponiveis');
+            const toggle = document.getElementById('sidebar-toggle');
             if (sidebar) {
-                sidebar.style.display = secao === 'escala' ? 'block' : 'none';
+                if (secao === 'escala') {
+                    // em mobile fica fechado por padrão; em desktop sempre visível
+                    if (window.innerWidth > 900) {
+                        sidebar.style.display = 'block';
+                    } else {
+                        sidebar.classList.remove('open');
+                        toggle.classList.remove('open');
+                    }
+                } else {
+                    sidebar.style.display = 'none';
+                    sidebar.classList.remove('open');
+                    if (toggle) toggle.classList.remove('open');
+                }
             }
+            if (toggle) toggle.style.display = secao === 'escala' && window.innerWidth <= 900 ? 'flex' : 'none';
             
             if (secao === 'configuracoes') {
                 carregarConfiguracoes();
@@ -273,6 +302,28 @@
             document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
             event.target.classList.add('active');
         }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-disponiveis');
+            const toggle = document.getElementById('sidebar-toggle');
+            sidebar.classList.toggle('open');
+            toggle.classList.toggle('open');
+        }
+
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar-disponiveis');
+            const toggle = document.getElementById('sidebar-toggle');
+            const escalaVisivel = document.getElementById('secao-escala').style.display !== 'none';
+            if (!escalaVisivel) return;
+            if (window.innerWidth > 900) {
+                sidebar.style.display = 'block';
+                sidebar.classList.remove('open');
+                if (toggle) toggle.style.display = 'none';
+            } else {
+                if (!sidebar.classList.contains('open')) sidebar.style.display = '';
+                if (toggle) toggle.style.display = 'flex';
+            }
+        });
     </script>
 </body>
 </html>

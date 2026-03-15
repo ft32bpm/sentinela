@@ -39,12 +39,13 @@ function renderizarTabela() {
             <td>${militar.nome}</td>
             <td>${militar.nomeCompleto || militar.nome}</td>
             <td>${militar.id}</td>
-            <td>
-                <button class="btn-editar" onclick="editarMilitar(${index})">Editar</button>
-                <button class="btn-excluir" onclick="excluirMilitar(${index})">Excluir</button>
+            <td style="display:flex;gap:6px;">
+                <button class="btn-action btn-warning" onclick="editarMilitar(${index})" title="Editar"><i data-lucide="pencil"></i></button>
+                <button class="btn-action btn-danger" onclick="excluirMilitar(${index})" title="Excluir"><i data-lucide="trash-2"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
+        lucide.createIcons({ nodes: [tr] });
     });
 }
 
@@ -220,6 +221,11 @@ function carregarConfiguracoes() {
         batalhaoInput.value = config.batalhao;
     }
     
+    const textoAssinaturaInput = document.getElementById('textoAssinaturaInput');
+    if (config.textoAssinatura !== undefined) {
+        textoAssinaturaInput.value = config.textoAssinatura;
+    }
+    
     comandanteSelect.innerHTML = '<option value="">Selecione o Comandante</option>';
     auxiliarPelSelect.innerHTML = '<option value="">Selecione o Auxiliar Pel</option>';
     
@@ -240,6 +246,7 @@ function carregarConfiguracoes() {
 
 function salvarConfiguracoes() {
     const batalhao = document.getElementById('batalhaoInput').value.trim();
+    const textoAssinatura = document.getElementById('textoAssinaturaInput').value.trim();
     const comandante = document.getElementById('comandanteSelect').value;
     const auxiliarPel = document.getElementById('auxiliarPelSelect').value;
     
@@ -253,7 +260,7 @@ function salvarConfiguracoes() {
         return;
     }
     
-    const config = { batalhao, comandante, auxiliarPel };
+    const config = { batalhao, textoAssinatura, comandante, auxiliarPel };
     localStorage.setItem('configuracoes', JSON.stringify(config));
     Swal.fire({
         icon: 'success',
@@ -285,6 +292,8 @@ function atualizarMilitaresDisponiveis() {
     const countBadge = document.getElementById('count-disponiveis');
     
     countBadge.textContent = disponiveis.length;
+    const countToggle = document.getElementById('count-toggle');
+    if (countToggle) countToggle.textContent = `(${disponiveis.length})`;
     
     if (disponiveis.length === 0) {
         container.innerHTML = '<p class="empty-message">Todos os militares estão alocados</p>';
@@ -365,65 +374,91 @@ function adicionarViatura() {
     const titulo = document.createElement('h2');
     titulo.textContent = `ÁGUIA ${contadorViaturas}`;
     
+    const indicatorViatura = document.createElement('span');
+    indicatorViatura.className = 'save-indicator';
+    titulo.appendChild(indicatorViatura);
+    
     const btnRemover = document.createElement('button');
-    btnRemover.textContent = 'Remover Viatura';
-    btnRemover.className = 'btn-remover-viatura';
+    btnRemover.innerHTML = '<i data-lucide="x"></i>';
+    btnRemover.title = 'Remover Viatura';
+    btnRemover.className = 'btn-action btn-danger';
     btnRemover.onclick = () => {
         if (confirm('Deseja remover esta viatura?')) {
+            localStorage.removeItem(`viatura_${viaturaId}`);
+            localStorage.setItem('totalViaturas', document.querySelectorAll('.viatura-section').length - 1);
             container.removeChild(section);
             atualizarNumeracaoViaturas();
+            atualizarSelectsMilitares();
+            atualizarMilitaresDisponiveis();
         }
     };
     
     header.appendChild(titulo);
     header.appendChild(btnRemover);
     
+    const horaInicialGlobal = document.getElementById('horaInicial').value || '13:30';
+    const horaFinalGlobal = document.getElementById('horaFinal').value || '01:30';
+
     const prefixoGroup = document.createElement('div');
-    prefixoGroup.className = 'form-group';
+    prefixoGroup.className = 'viatura-info-group';
     prefixoGroup.innerHTML = `
-        <label>Prefixo Viatura:</label>
-        <input type="text" class="prefixo-viatura" placeholder="Ex: 15053">
+        <div class="form-group">
+            <label>Prefixo</label>
+            <input type="text" class="prefixo-viatura" placeholder="Ex: 15053">
+        </div>
+        <div class="form-group">
+            <label>Hora Inicial</label>
+            <input type="time" class="hora-inicial-viatura" value="${horaInicialGlobal}">
+        </div>
+        <div class="form-group">
+            <label>Hora Final</label>
+            <input type="time" class="hora-final-viatura" value="${horaFinalGlobal}">
+        </div>
     `;
+    prefixoGroup.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', () => markViaturaUnsaved(viaturaId));
+    });
     
     const militaresDiv = document.createElement('div');
     militaresDiv.className = 'militares-viatura';
     
     const btnAdicionar = document.createElement('button');
-    btnAdicionar.textContent = '+ Adicionar Militar';
+    btnAdicionar.innerHTML = '<i data-lucide="user-plus"></i>';
+    btnAdicionar.title = 'Adicionar Militar';
+    btnAdicionar.className = 'btn-action btn-primary';
     btnAdicionar.onclick = () => adicionarMilitarViatura(viaturaId);
     
     const botoesDiv = document.createElement('div');
-    botoesDiv.style.marginTop = '10px';
+    botoesDiv.className = 'viatura-actions';
     
     const btnSalvar = document.createElement('button');
-    btnSalvar.textContent = 'Salvar Viatura';
+    btnSalvar.innerHTML = '<i data-lucide="save"></i>';
+    btnSalvar.title = 'Salvar Viatura';
+    btnSalvar.className = 'btn-action btn-success';
     btnSalvar.onclick = () => salvarViatura(viaturaId);
-    btnSalvar.style.marginRight = '10px';
     
     const btnLimpar = document.createElement('button');
-    btnLimpar.textContent = 'Limpar Viatura';
+    btnLimpar.innerHTML = '<i data-lucide="eraser"></i>';
+    btnLimpar.title = 'Limpar Viatura';
+    btnLimpar.className = 'btn-action btn-warning';
     btnLimpar.onclick = () => limparViatura(viaturaId);
     
+    botoesDiv.appendChild(btnAdicionar);
     botoesDiv.appendChild(btnSalvar);
     botoesDiv.appendChild(btnLimpar);
     
     section.appendChild(header);
     section.appendChild(prefixoGroup);
     section.appendChild(militaresDiv);
-    section.appendChild(btnAdicionar);
     section.appendChild(botoesDiv);
     
     container.appendChild(section);
+    lucide.createIcons({ nodes: [section] });
     
     // Tentar carregar dados salvos
     const dadosSalvos = localStorage.getItem(`viatura_${viaturaId}`);
     if (dadosSalvos) {
         carregarViatura(viaturaId);
-    } else {
-        // Adicionar alguns militares iniciais
-        for (let i = 0; i < 3; i++) {
-            adicionarMilitarViatura(viaturaId);
-        }
     }
 }
 
@@ -436,9 +471,10 @@ function atualizarNumeracaoViaturas() {
     contadorViaturas = viaturas.length;
 }
 
-function adicionarMilitarViatura(viaturaId) {
+function adicionarMilitarViatura(viaturaId, _silent = false) {
     const viatura = document.getElementById(viaturaId);
     const container = viatura.querySelector('.militares-viatura');
+    if (!_silent) markViaturaUnsaved(viaturaId);
     
     const div = document.createElement('div');
     div.className = 'militar-item';
@@ -482,13 +518,21 @@ function adicionarMilitarViatura(viaturaId) {
             inputNome.value = nome;
             inputId.value = idfunc;
             inputNum.value = num;
+            inputGrad.readOnly = true;
+            inputNome.readOnly = true;
+            inputId.readOnly = true;
             atualizarSelectsMilitares();
             atualizarFuncoesViatura(viaturaId);
             atualizarMilitaresDisponiveis();
+            markViaturaUnsaved(viaturaId);
         }
     };
     
-    selectFuncao.onchange = () => atualizarFuncoesViatura(viaturaId);
+    selectFuncao.onchange = () => {
+        selectFuncao.dataset.manual = 'true';
+        atualizarFuncoesViatura(viaturaId);
+        markViaturaUnsaved(viaturaId);
+    };
     
     inputNome.onchange = () => {
         atualizarSelectsMilitares();
@@ -516,13 +560,14 @@ function adicionarMilitarViatura(viaturaId) {
     inputHorarioCustom.value = 'false';
     
     const btnEditarHorario = document.createElement('button');
-    btnEditarHorario.innerHTML = '🕐';
+    btnEditarHorario.innerHTML = '<i data-lucide="clock"></i>';
     btnEditarHorario.title = 'Editar horário';
-    btnEditarHorario.className = 'btn-editar-horario';
+    btnEditarHorario.className = 'btn-action btn-clock';
     btnEditarHorario.onclick = async () => {
         const isCustom = inputHorarioCustom.value === 'true';
-        const horaInicialGeral = document.getElementById('horaInicial').value;
-        const horaFinalGeral = document.getElementById('horaFinal').value;
+        const viaturaSection = document.getElementById(viaturaId);
+        const horaInicialGeral = viaturaSection.querySelector('.hora-inicial-viatura')?.value || document.getElementById('horaInicial').value;
+        const horaFinalGeral = viaturaSection.querySelector('.hora-final-viatura')?.value || document.getElementById('horaFinal').value;
         const horaInicialAtual = inputHoraInicial.value || horaInicialGeral;
         const horaFinalAtual = inputHoraFinal.value || horaFinalGeral;
         const nomeAtual = inputNome.value || 'este militar';
@@ -546,7 +591,7 @@ function adicionarMilitarViatura(viaturaId) {
                     </div>
                     <div style="padding: 12px; background: rgba(6, 182, 212, 0.1); border-left: 3px solid var(--accent-primary); border-radius: 4px; margin-top: 15px;">
                         <small style="color: var(--text-secondary);">
-                            💡 <strong>Dica:</strong> Deixe os campos vazios para usar o horário padrão da escala (${horaInicialGeral} - ${horaFinalGeral})
+                            💡 <strong>Dica:</strong> Deixe os campos vazios para usar o horário da viatura (${horaInicialGeral} - ${horaFinalGeral})
                         </small>
                     </div>
                 </div>
@@ -583,9 +628,10 @@ function adicionarMilitarViatura(viaturaId) {
             inputHoraFinal.value = result.value.horaFinal;
             inputHoraInicial.style.display = 'block';
             inputHoraFinal.style.display = 'block';
-            btnEditarHorario.style.background = 'var(--warning)';
-            btnEditarHorario.innerHTML = '🕐✓';
+            btnEditarHorario.classList.add('active');
+            btnEditarHorario.innerHTML = '<i data-lucide="clock-check"></i>';
             btnEditarHorario.title = `Horário personalizado: ${result.value.horaInicial} - ${result.value.horaFinal}`;
+            lucide.createIcons({ nodes: [btnEditarHorario] });
             
             Swal.fire({
                 icon: 'success',
@@ -601,9 +647,10 @@ function adicionarMilitarViatura(viaturaId) {
             inputHoraFinal.style.display = 'none';
             inputHoraInicial.value = '';
             inputHoraFinal.value = '';
-            btnEditarHorario.style.background = 'var(--info)';
-            btnEditarHorario.innerHTML = '🕐';
+            btnEditarHorario.classList.remove('active');
+            btnEditarHorario.innerHTML = '<i data-lucide="clock"></i>';
             btnEditarHorario.title = 'Editar horário';
+            lucide.createIcons({ nodes: [btnEditarHorario] });
             
             Swal.fire({
                 icon: 'info',
@@ -615,13 +662,16 @@ function adicionarMilitarViatura(viaturaId) {
         }
     };
     
-    const btnRemover = document.createElement('button');
-    btnRemover.textContent = 'Remover';
-    btnRemover.onclick = () => {
+    const btnRemoverMilitar = document.createElement('button');
+    btnRemoverMilitar.innerHTML = '<i data-lucide="x"></i>';
+    btnRemoverMilitar.title = 'Remover';
+    btnRemoverMilitar.className = 'btn-action btn-danger';
+    btnRemoverMilitar.onclick = () => {
         container.removeChild(div);
         atualizarSelectsMilitares();
         atualizarFuncoesViatura(viaturaId);
         atualizarMilitaresDisponiveis();
+        markViaturaUnsaved(viaturaId);
     };
     
     div.appendChild(selectMilitar);
@@ -634,13 +684,29 @@ function adicionarMilitarViatura(viaturaId) {
     div.appendChild(inputHoraFinal);
     div.appendChild(inputHorarioCustom);
     div.appendChild(btnEditarHorario);
-    div.appendChild(btnRemover);
+    div.appendChild(btnRemoverMilitar);
     
     container.appendChild(div);
+    lucide.createIcons({ nodes: [div] });
 }
 
-function adicionarMilitarIndisponivel(tipo) {
+function reordenarFolga() {
+    const container = document.getElementById('militaresFolga');
+    const militaresCadastrados = carregarMilitares();
+    const items = Array.from(container.querySelectorAll('.militar-item-indisponivel'));
+    items.sort((a, b) => {
+        const nomeA = a.querySelector('.nome').value;
+        const nomeB = b.querySelector('.nome').value;
+        const mA = militaresCadastrados.find(m => m.nome === nomeA);
+        const mB = militaresCadastrados.find(m => m.nome === nomeB);
+        return (mA?.num ?? 999999) - (mB?.num ?? 999999);
+    });
+    items.forEach(item => container.appendChild(item));
+}
+
+function adicionarMilitarIndisponivel(tipo, _silent = false) {
     const container = document.getElementById(`militares${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+    if (!_silent) markIndisponivelUnsaved(tipo);
     
     const div = document.createElement('div');
     div.className = 'militar-item-indisponivel';
@@ -660,14 +726,17 @@ function adicionarMilitarIndisponivel(tipo) {
     const inputGrad = document.createElement('input');
     inputGrad.placeholder = 'GRAD';
     inputGrad.className = 'grad';
+    inputGrad.readOnly = true;
     
     const inputNome = document.createElement('input');
     inputNome.placeholder = 'NOME';
     inputNome.className = 'nome';
+    inputNome.readOnly = true;
     
     const inputId = document.createElement('input');
     inputId.placeholder = 'ID FUNC';
     inputId.className = 'idfunc';
+    inputId.readOnly = true;
     
     selectMilitar.onchange = function() {
         if(this.value) {
@@ -677,24 +746,20 @@ function adicionarMilitarIndisponivel(tipo) {
             inputId.value = idfunc;
             atualizarSelectsMilitares();
             atualizarMilitaresDisponiveis();
+            markIndisponivelUnsaved(tipo);
+            if (tipo === 'folga') reordenarFolga();
         }
     };
     
-    inputNome.onchange = () => {
-        atualizarSelectsMilitares();
-        atualizarMilitaresDisponiveis();
-    };
-    inputId.onchange = () => {
-        atualizarSelectsMilitares();
-        atualizarMilitaresDisponiveis();
-    };
-    
-    const btnRemover = document.createElement('button');
-    btnRemover.textContent = 'Remover';
-    btnRemover.onclick = () => {
+    const btnRemoverInd = document.createElement('button');
+    btnRemoverInd.innerHTML = '<i data-lucide="x"></i>';
+    btnRemoverInd.title = 'Remover';
+    btnRemoverInd.className = 'btn-action btn-danger';
+    btnRemoverInd.onclick = () => {
         container.removeChild(div);
         atualizarSelectsMilitares();
         atualizarMilitaresDisponiveis();
+        markIndisponivelUnsaved(tipo);
     };
     
     div.appendChild(selectMilitar);
@@ -710,9 +775,10 @@ function adicionarMilitarIndisponivel(tipo) {
         div.appendChild(inputMotivo);
     }
     
-    div.appendChild(btnRemover);
+    div.appendChild(btnRemoverInd);
     
     container.appendChild(div);
+    lucide.createIcons({ nodes: [div] });
 }
 
 function atualizarSelectsMilitares() {
@@ -761,94 +827,58 @@ function atualizarSelectsMilitares() {
 function atualizarFuncoesViatura(viaturaId) {
     const viatura = document.getElementById(viaturaId);
     const items = Array.from(viatura.querySelectorAll('.militar-item'));
-    
-    // Coletar militares com número de antiguidade
+
     const militares = items.map(item => ({
-        item: item,
+        item,
         num: parseInt(item.querySelector('.num-antiguidade')?.value) || 999999,
         nome: item.querySelector('.nome')?.value || '',
         funcaoSelect: item.querySelector('.funcao')
     })).filter(m => m.nome);
-    
-    // Ordenar por antiguidade
+
     militares.sort((a, b) => a.num - b.num);
-    
-    const totalMilitares = militares.length;
-    
-    // Atualizar os selects de função e atribuir automaticamente
+    const total = militares.length;
+
+    // Salvar funções manuais ANTES de recriar as opções (chave = num de antiguidade)
+    const manuais = {};
+    militares.forEach(m => {
+        if (m.funcaoSelect.dataset.manual === 'true') {
+            manuais[m.num] = m.funcaoSelect.dataset.funcaoManual || m.funcaoSelect.value;
+        }
+    });
+
+    // Função automática por posição na lista ordenada por antiguidade
+    function funcaoAuto(idx) {
+        if (idx === 0) return 'CMDT DE EQUIPE';
+        if (idx === total - 1) return 'MOTORISTA';
+        if (idx === 1) return 'SEGURANÇA';
+        if (idx === 2) return 'ANOTADOR';
+        if (idx === 3) return 'ESTAGIÁRIO';
+        return '';
+    }
+
     militares.forEach((militar, idx) => {
         const select = militar.funcaoSelect;
-        
-        // Limpar e adicionar opção vazia
         select.innerHTML = '<option value="">Função</option>';
-        
-        // Adicionar todas as funções
-        funcoes.forEach(f => {
-            select.innerHTML += `<option value="${f}">${f}</option>`;
-        });
-        
-        // Atribuir função automaticamente baseado na posição
-        let funcaoSugerida = null;
-        
-        if (idx === 0) {
-            // 1º mais antigo: CMDT DE EQUIPE
-            funcaoSugerida = 'CMDT DE EQUIPE';
-        } else if (idx === totalMilitares - 2 && totalMilitares >= 2) {
-            // Penúltimo: MOTORISTA
-            funcaoSugerida = 'MOTORISTA';
-        } else if (idx === 1) {
-            // 2º mais antigo: SEGURANÇA
-            funcaoSugerida = 'SEGURANÇA';
-        } else if (idx === 2 && totalMilitares >= 5) {
-            // 3º mais antigo (se houver 5 ou mais): ANOTADOR
-            funcaoSugerida = 'ANOTADOR';
-        } else if (idx === totalMilitares - 1) {
-            // Último
-            if (totalMilitares >= 5) {
-                // Se houver 5 ou mais: ESTAGIÁRIO
-                funcaoSugerida = 'ESTAGIÁRIO';
-            } else if (totalMilitares === 4) {
-                // Se houver 4: ANOTADOR
-                funcaoSugerida = 'ANOTADOR';
-            }
-        }
-        
-        if (funcaoSugerida) {
-            select.value = funcaoSugerida;
-        }
-    });
-    
-    // Reorganizar visualmente na ordem correta
-    const container = viatura.querySelector('.militares-viatura');
-    const ordemVisual = [];
-    
-    // Definir ordem visual: CMDT, MOTORISTA, SEGURANÇA, ANOTADOR, ESTAGIÁRIO
-    militares.forEach((militar, idx) => {
-        if (idx === 0) {
-            // CMDT DE EQUIPE - primeiro
-            ordemVisual[0] = militar.item;
-        } else if (idx === totalMilitares - 2 && totalMilitares >= 2) {
-            // MOTORISTA - segundo
-            ordemVisual[1] = militar.item;
-        } else if (idx === 1) {
-            // SEGURANÇA - terceiro
-            ordemVisual[2] = militar.item;
-        } else if (idx === 2 && totalMilitares >= 5) {
-            // ANOTADOR - quarto
-            ordemVisual[3] = militar.item;
-        } else if (idx === totalMilitares - 1) {
-            // ESTAGIÁRIO/ANOTADOR - último
-            ordemVisual[totalMilitares - 1] = militar.item;
+        funcoes.forEach(f => { select.innerHTML += `<option value="${f}">${f}</option>`; });
+
+        if (manuais[militar.num] !== undefined) {
+            select.dataset.manual = 'true';
+            select.dataset.funcaoManual = manuais[militar.num];
+            select.value = manuais[militar.num];
         } else {
-            // Outros militares
-            ordemVisual.push(militar.item);
+            select.value = funcaoAuto(idx);
         }
     });
-    
-    // Remover nulls e reorganizar no DOM
-    ordemVisual.filter(item => item).forEach(item => {
-        container.appendChild(item);
-    });
+
+    // Ordem visual: CMDT (idx 0), MOTORISTA (último), restantes por antiguidade
+    const container = viatura.querySelector('.militares-viatura');
+    if (total >= 2) {
+        container.appendChild(militares[0].item);
+        container.appendChild(militares[total - 1].item);
+        for (let i = 1; i < total - 1; i++) container.appendChild(militares[i].item);
+    } else {
+        militares.forEach(m => container.appendChild(m.item));
+    }
 }
 
 function coletarDadosViaturas() {
@@ -856,6 +886,8 @@ function coletarDadosViaturas() {
     
     document.querySelectorAll('.viatura-section').forEach((viatura, index) => {
         const prefixo = viatura.querySelector('.prefixo-viatura').value;
+        const horaInicialViatura = viatura.querySelector('.hora-inicial-viatura')?.value || document.getElementById('horaInicial').value;
+        const horaFinalViatura = viatura.querySelector('.hora-final-viatura')?.value || document.getElementById('horaFinal').value;
         const militares = [];
         
         viatura.querySelectorAll('.militar-item').forEach(item => {
@@ -873,7 +905,7 @@ function coletarDadosViaturas() {
         });
         
         if (militares.length > 0) {
-            viaturas.push({ numero: index + 1, prefixo, militares });
+            viaturas.push({ numero: index + 1, prefixo, horaInicialViatura, horaFinalViatura, militares });
         }
     });
     
@@ -1005,8 +1037,8 @@ async function gerarPDF() {
             doc.rect(35, y, 40, 6); doc.text(m.nome, 37, y + 4);
             doc.rect(75, y, 25, 6); doc.text(m.idfunc, 87.5, y + 4, { align: 'center' });
             
-            const horaIni = m.horarioCustom && m.horaInicial ? m.horaInicial : horaInicial;
-            const horaFin = m.horarioCustom && m.horaFinal ? m.horaFinal : horaFinal;
+            const horaIni = m.horarioCustom && m.horaInicial ? m.horaInicial : viatura.horaInicialViatura;
+            const horaFin = m.horarioCustom && m.horaFinal ? m.horaFinal : viatura.horaFinalViatura;
             
             doc.rect(100, y, 20, 6); doc.text(horaIni, 110, y + 4, { align: 'center' });
             doc.rect(120, y, 20, 6); doc.text(horaFin, 130, y + 4, { align: 'center' });
@@ -1087,8 +1119,9 @@ async function gerarPDF() {
     
     // Rodapé
     const batalhaoRodape = config.batalhao || '32º BPM';
-    let auxiliarPelTexto = 'Aux. Pel. da Força Tática 32BPM';
-    let comandanteTexto = `Rep comando da Força Tática do ${batalhaoRodape}`;
+    const textoAssinatura = config.textoAssinatura || `da Força Tática do ${batalhaoRodape}`;
+    let auxiliarPelTexto = `Aux. Pel. ${textoAssinatura}`;
+    let comandanteTexto = `Rep comando ${textoAssinatura}`;
     
     if (config.auxiliarPel) {
         const [grad, nomeCompleto] = config.auxiliarPel.split('|');
@@ -1111,7 +1144,7 @@ async function gerarPDF() {
     doc.setFont('times', 'bold');
     doc.text(auxiliarPelTexto, 105, y, { align: 'center' });
     doc.setFont('times', 'normal');
-    doc.text('Aux. Pel. da Força Tática 32BPM', 105, y + 5, { align: 'center' });
+    doc.text(`Aux. Pel. ${textoAssinatura}`, 105, y + 5, { align: 'center' });
     
     y += 15;
     doc.text('VISTO EM: ____/____/____', 105, y, { align: 'center' });
@@ -1120,7 +1153,7 @@ async function gerarPDF() {
     doc.setFont('times', 'bold');
     doc.text(comandanteTexto, 15, y);
     doc.setFont('times', 'normal');
-    doc.text('Rep comando da Força Tática do 32º BPM', 15, y + 5);
+    doc.text(`Rep comando ${textoAssinatura}`, 15, y + 5);
     
     // Gerar nome do arquivo com data e dia da semana
     const dataObj = new Date(dataEscala + 'T00:00:00');
@@ -1140,6 +1173,8 @@ async function gerarPDF() {
 function salvarViatura(viaturaId) {
     const viatura = document.getElementById(viaturaId);
     const prefixo = viatura.querySelector('.prefixo-viatura').value;
+    const horaInicialViatura = viatura.querySelector('.hora-inicial-viatura').value;
+    const horaFinalViatura = viatura.querySelector('.hora-final-viatura').value;
     const militares = [];
     
     viatura.querySelectorAll('.militar-item').forEach(item => {
@@ -1157,8 +1192,10 @@ function salvarViatura(viaturaId) {
         }
     });
     
-    const dados = { prefixo, militares };
+    const dados = { prefixo, horaInicialViatura, horaFinalViatura, militares };
     localStorage.setItem(`viatura_${viaturaId}`, JSON.stringify(dados));
+    localStorage.setItem('totalViaturas', document.querySelectorAll('.viatura-section').length);
+    setSaveIndicator(getViaturaIndicator(viaturaId), 'saved');
     Swal.fire({
         icon: 'success',
         title: 'Salvo!',
@@ -1184,9 +1221,8 @@ function limparViatura(viaturaId) {
             const viatura = document.getElementById(viaturaId);
             viatura.querySelector('.prefixo-viatura').value = '';
             viatura.querySelector('.militares-viatura').innerHTML = '';
-            for (let i = 0; i < 3; i++) {
-                adicionarMilitarViatura(viaturaId);
-            }
+            atualizarSelectsMilitares();
+            atualizarMilitaresDisponiveis();
             Swal.fire({
                 icon: 'success',
                 title: 'Limpo!',
@@ -1201,14 +1237,16 @@ function limparViatura(viaturaId) {
 function carregarViatura(viaturaId) {
     const dados = localStorage.getItem(`viatura_${viaturaId}`);
     if (dados) {
-        const { prefixo, militares } = JSON.parse(dados);
+        const { prefixo, horaInicialViatura, horaFinalViatura, militares } = JSON.parse(dados);
         const viatura = document.getElementById(viaturaId);
         
         viatura.querySelector('.prefixo-viatura').value = prefixo;
+        if (horaInicialViatura) viatura.querySelector('.hora-inicial-viatura').value = horaInicialViatura;
+        if (horaFinalViatura) viatura.querySelector('.hora-final-viatura').value = horaFinalViatura;
         viatura.querySelector('.militares-viatura').innerHTML = '';
         
         militares.forEach(m => {
-            adicionarMilitarViatura(viaturaId);
+            adicionarMilitarViatura(viaturaId, true);
             const container = viatura.querySelector('.militares-viatura');
             const items = container.querySelectorAll('.militar-item');
             const ultimoItem = items[items.length - 1];
@@ -1218,6 +1256,9 @@ function carregarViatura(viaturaId) {
                 ultimoItem.querySelector('.nome').value = m.nome;
                 ultimoItem.querySelector('.idfunc').value = m.idfunc;
                 ultimoItem.querySelector('.num-antiguidade').value = m.num;
+                ultimoItem.querySelector('.grad').readOnly = true;
+                ultimoItem.querySelector('.nome').readOnly = true;
+                ultimoItem.querySelector('.idfunc').readOnly = true;
                 
                 if (m.horarioCustom) {
                     ultimoItem.querySelector('.horario-custom-flag').value = 'true';
@@ -1225,26 +1266,32 @@ function carregarViatura(viaturaId) {
                     ultimoItem.querySelector('.hora-final-custom').value = m.horaFinal || '';
                     ultimoItem.querySelector('.hora-inicial-custom').style.display = 'block';
                     ultimoItem.querySelector('.hora-final-custom').style.display = 'block';
-                    const btnEditar = ultimoItem.querySelector('.btn-editar-horario');
+                    const btnEditar = ultimoItem.querySelector('.btn-action.btn-clock');
                     if (btnEditar) {
-                        btnEditar.style.background = 'var(--warning)';
+                        btnEditar.classList.add('active');
+                        btnEditar.innerHTML = '<i data-lucide="clock-check"></i>';
                         btnEditar.title = 'Horário personalizado ativo';
+                        lucide.createIcons({ nodes: [btnEditar] });
                     }
                 }
             }
         });
         
-        atualizarSelectsMilitares();
-        atualizarFuncoesViatura(viaturaId);
-        
-        // Restaurar as funções salvas após atualizar
-        militares.forEach((m, index) => {
+        // Marcar funções salvas como manuais (por num de antiguidade) antes de chamar atualizarFuncoesViatura
+        militares.forEach(m => {
+            if (!m.funcao) return;
             const container = viatura.querySelector('.militares-viatura');
-            const items = container.querySelectorAll('.militar-item');
-            if (items[index] && m.funcao) {
-                items[index].querySelector('.funcao').value = m.funcao;
+            const item = Array.from(container.querySelectorAll('.militar-item'))
+                .find(el => el.querySelector('.num-antiguidade')?.value == m.num);
+            if (item) {
+                const select = item.querySelector('.funcao');
+                select.dataset.manual = 'true';
+                select.dataset.funcaoManual = m.funcao;
             }
         });
+
+        atualizarSelectsMilitares();
+        atualizarFuncoesViatura(viaturaId);
     }
 }
 
@@ -1268,6 +1315,7 @@ function limparDadosDoDia() {
             
             // Limpar intervalo de escala
             localStorage.removeItem('indisponiveis_folga');
+            localStorage.removeItem('totalViaturas');
             
             // Recarregar página para resetar interface
             location.reload();
@@ -1312,6 +1360,9 @@ function adicionarRestantesFolga() {
     });
     
     atualizarSelectsMilitares();
+    atualizarMilitaresDisponiveis();
+    reordenarFolga();
+    markIndisponivelUnsaved('folga');
     Swal.fire({
         icon: 'success',
         title: 'Adicionados!',
@@ -1325,6 +1376,7 @@ function salvarIndisponiveis(tipo) {
     const dados = coletarDadosIndisponiveis(tipo);
     localStorage.setItem(`indisponiveis_${tipo}`, JSON.stringify(dados));
     const nomes = { folga: 'INTERVALO DE ESCALA', ferias: 'FÉRIAS', le: 'LE', ltip: 'LTIP', lts: 'LTS', adido: 'ADIDO', rsp: 'RSP' };
+    setSaveIndicator(getIndisponivelIndicator(tipo), 'saved');
     Swal.fire({
         icon: 'success',
         title: 'Salvo!',
@@ -1353,6 +1405,7 @@ function limparIndisponiveis(tipo) {
                 container.innerHTML = '';
             }
             atualizarSelectsMilitares();
+            atualizarMilitaresDisponiveis();
             Swal.fire({
                 icon: 'success',
                 title: 'Limpo!',
@@ -1369,7 +1422,7 @@ function carregarIndisponiveis(tipo) {
     if (dados) {
         const militares = JSON.parse(dados);
         militares.forEach(m => {
-            adicionarMilitarIndisponivel(tipo);
+            adicionarMilitarIndisponivel(tipo, true);
             const container = document.getElementById(`militares${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
             const items = container.querySelectorAll('.militar-item-indisponivel');
             const ultimoItem = items[items.length - 1];
@@ -1378,12 +1431,53 @@ function carregarIndisponiveis(tipo) {
                 ultimoItem.querySelector('.grad').value = m.grad;
                 ultimoItem.querySelector('.nome').value = m.nome;
                 ultimoItem.querySelector('.idfunc').value = m.idfunc;
+                // Restaurar o select para o valor correto
+                const select = ultimoItem.querySelector('select');
+                if (select) {
+                    const valor = `${m.grad}|${m.nome}|${m.idfunc}`;
+                    // Adicionar a opção se não existir (militar já alocado em outra seção)
+                    if (!select.querySelector(`option[value="${valor}"]`)) {
+                        select.innerHTML += `<option value="${valor}">${m.grad} ${m.nome}</option>`;
+                    }
+                    select.value = valor;
+                }
                 if (m.motivo && ultimoItem.querySelector('.motivo')) {
                     ultimoItem.querySelector('.motivo').value = m.motivo;
                 }
             }
         });
+        if (tipo === 'folga') reordenarFolga();
     }
+}
+
+// ========== INDICADORES DE SALVO ==========
+
+function setSaveIndicator(el, state) {
+    // state: 'unsaved' | 'saved' | 'clear'
+    if (!el) return;
+    el.classList.remove('unsaved', 'saved');
+    if (state === 'unsaved') {
+        el.classList.add('unsaved');
+    } else if (state === 'saved') {
+        el.classList.add('saved');
+        setTimeout(() => { el.classList.remove('saved'); }, 3000);
+    }
+}
+
+function getViaturaIndicator(viaturaId) {
+    return document.querySelector(`#${viaturaId} .save-indicator`);
+}
+
+function getIndisponivelIndicator(tipo) {
+    return document.getElementById(`indicator-${tipo}`);
+}
+
+function markViaturaUnsaved(viaturaId) {
+    setSaveIndicator(getViaturaIndicator(viaturaId), 'unsaved');
+}
+
+function markIndisponivelUnsaved(tipo) {
+    setSaveIndicator(getIndisponivelIndicator(tipo), 'unsaved');
 }
 
 // ========== INICIALIZAÇÃO ==========
@@ -1424,8 +1518,15 @@ window.onload = function() {
     document.getElementById('dataEmissao').valueAsDate = new Date();
     document.getElementById('dataEscala').valueAsDate = new Date();
     
-    // Adicionar primeira viatura
-    adicionarViatura();
+    // Restaurar viaturas salvas ou criar primeira viatura
+    const total = parseInt(localStorage.getItem('totalViaturas')) || 0;
+    if (total > 0) {
+        for (let i = 0; i < total; i++) {
+            adicionarViatura();
+        }
+    } else {
+        adicionarViatura();
+    }
     
     // Carregar dados salvos de folga
     carregarIndisponiveis('folga');
@@ -1440,4 +1541,8 @@ window.onload = function() {
     
     renderizarTabela();
     atualizarMilitaresDisponiveis();
+    
+    // Inicializar visibilidade do toggle da sidebar
+    const toggle = document.getElementById('sidebar-toggle');
+    if (toggle) toggle.style.display = window.innerWidth <= 900 ? 'flex' : 'none';
 };
