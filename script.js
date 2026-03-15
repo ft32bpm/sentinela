@@ -3,13 +3,13 @@
 function carregarMilitares() {
     const militares = localStorage.getItem('militares');
     return militares ? JSON.parse(militares) : [
-        { num: 1, grad: 'SGT', nome: 'FILLMANN', nomeCompleto: 'DIOGO FERNANDES FILLMANN', id: '4359658' },
+        { num: 1, grad: '2°SGT', nome: 'FILLMANN', nomeCompleto: 'DIOGO FERNANDES FILLMANN', id: '4359658' },
         { num: 2, grad: 'SD', nome: 'MUCHA', nomeCompleto: 'PAULO RAFAEL MUCHA ANTUNES', id: '3147347' },
         { num: 3, grad: 'SD', nome: 'IGOR', nomeCompleto: 'IGOR SZIMWELSKI MARTINS', id: '3702740' },
         { num: 4, grad: 'SD', nome: 'PAIM', nomeCompleto: 'DOUGLAS PAIM DOS SANTOS', id: '3710998' },
         { num: 5, grad: 'SD', nome: 'PENGO', nomeCompleto: 'RONIMAR DE MORAES PENGO', id: '3715990' },
         { num: 6, grad: 'SD', nome: 'BITENCOURT', nomeCompleto: 'WILLIAM BITENCOURT FERNANDES', id: '4363779' },
-        { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4510826' },
+        { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4516826' },
         { num: 8, grad: 'SD', nome: 'FERRÃO', nomeCompleto: 'STEFANO LOPES FERRÃO', id: '4666771' },
         { num: 9, grad: 'SD', nome: 'KOHLER', nomeCompleto: 'ERICSON KOHLER MORAES', id: '4665414' },
         { num: 10, grad: 'SD', nome: 'JULIO', nomeCompleto: 'JULIO SAMUEL DA SILVA', id: '4764048' },
@@ -186,7 +186,7 @@ function resetarDados() {
             { num: 4, grad: 'SD', nome: 'PAIM', nomeCompleto: 'DOUGLAS PAIM DOS SANTOS', id: '3710998' },
             { num: 5, grad: 'SD', nome: 'PENGO', nomeCompleto: 'RONIMAR DE MORAES PENGO', id: '3715990' },
             { num: 6, grad: 'SD', nome: 'BITENCOURT', nomeCompleto: 'WILLIAM BITENCOURT FERNANDES', id: '4363779' },
-            { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4510826' },
+            { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4516826' },
             { num: 8, grad: 'SD', nome: 'FERRÃO', nomeCompleto: 'STEFANO LOPES FERRÃO', id: '4666771' },
             { num: 9, grad: 'SD', nome: 'KOHLER', nomeCompleto: 'ERICSON KOHLER MORAES', id: '4665414' },
             { num: 10, grad: 'SD', nome: 'JULIO', nomeCompleto: 'JULIO SAMUEL DA SILVA', id: '4764048' },
@@ -870,15 +870,15 @@ function atualizarFuncoesViatura(viaturaId) {
         }
     });
 
-    // Ordem visual: CMDT (idx 0), MOTORISTA (último), restantes por antiguidade
+    // Ordem visual pela ordem canônica das funções
     const container = viatura.querySelector('.militares-viatura');
-    if (total >= 2) {
-        container.appendChild(militares[0].item);
-        container.appendChild(militares[total - 1].item);
-        for (let i = 1; i < total - 1; i++) container.appendChild(militares[i].item);
-    } else {
-        militares.forEach(m => container.appendChild(m.item));
-    }
+    const ordemFuncoes = ['CMDT DE EQUIPE', 'MOTORISTA', 'SEGURANÇA', 'ANOTADOR', 'ESTAGIÁRIO', ''];
+    militares.sort((a, b) => {
+        const ia = ordemFuncoes.indexOf(a.funcaoSelect.value);
+        const ib = ordemFuncoes.indexOf(b.funcaoSelect.value);
+        return (ia === -1 ? ordemFuncoes.length : ia) - (ib === -1 ? ordemFuncoes.length : ib);
+    });
+    militares.forEach(m => container.appendChild(m.item));
 }
 
 function coletarDadosViaturas() {
@@ -1001,11 +1001,14 @@ async function gerarPDF() {
     doc.setFont('times', 'bold');
     doc.text(`FORÇA TÁTICA ${batalhao}`, 105, 48, { align: 'center' });
     
-    const dataFormatada = new Date(dataEscala + 'T00:00:00').toLocaleDateString('pt-BR', { 
+    const dataEscalaObj = new Date(dataEscala + 'T00:00:00');
+    const dataFormatada = dataEscalaObj.toLocaleDateString('pt-BR', { 
         day: '2-digit', month: 'long', year: 'numeric' 
     });
+    const diasSemanaTitulo = ['DOMINGO', 'SEGUNDA-FEIRA', 'TERÇA-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'SÁBADO'];
+    const diaSemanaEscala = diasSemanaTitulo[dataEscalaObj.getDay()];
     doc.setFontSize(10);
-    doc.text(`ESCALA DE SERVIÇO PARA O DIA ${dataFormatada.toUpperCase()}`, 105, 55, { align: 'center' });
+    doc.text(`ESCALA DE SERVIÇO PARA O DIA ${dataFormatada.toUpperCase()} (${diaSemanaEscala})`, 105, 55, { align: 'center' });
     
     let y = 63;
     
@@ -1518,7 +1521,16 @@ window.onload = function() {
     document.getElementById('dataEmissao').valueAsDate = new Date();
     document.getElementById('dataEscala').valueAsDate = new Date();
     
-    // Restaurar viaturas salvas ou criar primeira viatura
+    // Carregar PRIMEIRO todos os indisponíveis
+    carregarIndisponiveis('folga');
+    carregarIndisponiveis('ferias');
+    carregarIndisponiveis('le');
+    carregarIndisponiveis('ltip');
+    carregarIndisponiveis('lts');
+    carregarIndisponiveis('adido');
+    carregarIndisponiveis('rsp');
+    
+    // DEPOIS restaurar viaturas salvas ou criar primeira viatura
     const total = parseInt(localStorage.getItem('totalViaturas')) || 0;
     if (total > 0) {
         for (let i = 0; i < total; i++) {
@@ -1527,17 +1539,6 @@ window.onload = function() {
     } else {
         adicionarViatura();
     }
-    
-    // Carregar dados salvos de folga
-    carregarIndisponiveis('folga');
-    
-    // Carregar dados salvos de férias, lts, adido e rsp
-    carregarIndisponiveis('ferias');
-    carregarIndisponiveis('le');
-    carregarIndisponiveis('ltip');
-    carregarIndisponiveis('lts');
-    carregarIndisponiveis('adido');
-    carregarIndisponiveis('rsp');
     
     renderizarTabela();
     atualizarMilitaresDisponiveis();
