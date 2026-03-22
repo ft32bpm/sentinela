@@ -2,20 +2,7 @@
 
 function carregarMilitares() {
     const militares = localStorage.getItem('militares');
-    return militares ? JSON.parse(militares) : [
-        { num: 1, grad: '2°SGT', nome: 'FILLMANN', nomeCompleto: 'DIOGO FERNANDES FILLMANN', id: '4359658' },
-        { num: 2, grad: 'SD', nome: 'MUCHA', nomeCompleto: 'PAULO RAFAEL MUCHA ANTUNES', id: '3147347' },
-        { num: 3, grad: 'SD', nome: 'IGOR', nomeCompleto: 'IGOR SZIMWELSKI MARTINS', id: '3702740' },
-        { num: 4, grad: 'SD', nome: 'PAIM', nomeCompleto: 'DOUGLAS PAIM DOS SANTOS', id: '3710998' },
-        { num: 5, grad: 'SD', nome: 'PENGO', nomeCompleto: 'RONIMAR DE MORAES PENGO', id: '3715990' },
-        { num: 6, grad: 'SD', nome: 'BITENCOURT', nomeCompleto: 'WILLIAM BITENCOURT FERNANDES', id: '4363779' },
-        { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4516826' },
-        { num: 8, grad: 'SD', nome: 'FERRÃO', nomeCompleto: 'STEFANO LOPES FERRÃO', id: '4666771' },
-        { num: 9, grad: 'SD', nome: 'KOHLER', nomeCompleto: 'ERICSON KOHLER MORAES', id: '4665414' },
-        { num: 10, grad: 'SD', nome: 'JULIO', nomeCompleto: 'JULIO SAMUEL DA SILVA', id: '4764048' },
-        { num: 11, grad: 'SD', nome: 'KELI', nomeCompleto: 'KELI BARZOLA', id: '4764889' },
-        { num: 12, grad: '2°SGT', nome: 'HORTMANN', nomeCompleto: 'HORTMANN', id: '2323451' }
-    ];
+    return militares ? JSON.parse(militares) : [];
 }
 
 function salvarMilitares(militares) {
@@ -33,8 +20,10 @@ function renderizarTabela() {
     
     militares.forEach((militar, index) => {
         const tr = document.createElement('tr');
+        tr.draggable = true;
+        tr.dataset.index = index;
         tr.innerHTML = `
-            <td><strong>${militar.num}</strong></td>
+            <td style="cursor:move;"><strong>${militar.num}</strong></td>
             <td>${militar.grad}</td>
             <td>${militar.nome}</td>
             <td>${militar.nomeCompleto || militar.nome}</td>
@@ -44,50 +33,93 @@ function renderizarTabela() {
                 <button class="btn-action btn-danger" onclick="excluirMilitar(${index})" title="Excluir"><i data-lucide="trash-2"></i></button>
             </td>
         `;
+        
+        tr.addEventListener('dragstart', handleDragStart);
+        tr.addEventListener('dragover', handleDragOver);
+        tr.addEventListener('drop', handleDrop);
+        tr.addEventListener('dragend', handleDragEnd);
+        
         tbody.appendChild(tr);
         lucide.createIcons({ nodes: [tr] });
     });
 }
 
+let draggedRow = null;
+
+function handleDragStart(e) {
+    draggedRow = this;
+    this.style.opacity = '0.4';
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) e.stopPropagation();
+    
+    if (draggedRow !== this) {
+        const militares = carregarMilitares();
+        militares.sort((a, b) => a.num - b.num);
+        
+        const fromIndex = parseInt(draggedRow.dataset.index);
+        const toIndex = parseInt(this.dataset.index);
+        
+        const [movedItem] = militares.splice(fromIndex, 1);
+        militares.splice(toIndex, 0, movedItem);
+        
+        militares.forEach((m, i) => m.num = i + 1);
+        salvarMilitares(militares);
+        renderizarTabela();
+        atualizarSelectsMilitares();
+    }
+    
+    return false;
+}
+
+function handleDragEnd(e) {
+    this.style.opacity = '1';
+}
+
 function adicionarMilitarCadastro() {
-    const num = parseInt(document.getElementById('numAntiguidade').value);
-    const grad = document.getElementById('gradCadastro').value;
+    const grad = document.getElementById('gradCadastro').value.trim();
     const nome = document.getElementById('nomeCadastro').value.trim().toUpperCase();
     const nomeCompleto = document.getElementById('nomeCompletoCadastro').value.trim().toUpperCase();
     const id = document.getElementById('idfuncCadastro').value.trim();
     
-    if (!num || !grad || !nome || !nomeCompleto || !id) {
+    if (!grad || !nome || !id) {
         Swal.fire({
             icon: 'warning',
             title: 'Campos incompletos',
-            text: 'Preencha todos os campos!',
+            text: 'Preencha os campos obrigatórios: Graduação, Nome e ID Funcional!',
             confirmButtonColor: '#4a90e2'
         });
         return;
     }
     
     const militares = carregarMilitares();
+    const num = militares.length > 0 ? Math.max(...militares.map(m => m.num)) + 1 : 1;
     
-    if (militares.some(m => m.num === num)) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Erro',
-            text: 'Já existe um militar com este número de antiguidade!',
-            confirmButtonColor: '#4a90e2'
-        });
-        return;
-    }
-    
-    militares.push({ num, grad, nome, nomeCompleto, id });
+    militares.push({ num, grad, nome, nomeCompleto: nomeCompleto || nome, id });
     salvarMilitares(militares);
     
-    document.getElementById('numAntiguidade').value = '';
     document.getElementById('gradCadastro').value = '';
     document.getElementById('nomeCadastro').value = '';
     document.getElementById('nomeCompletoCadastro').value = '';
     document.getElementById('idfuncCadastro').value = '';
     
     renderizarTabela();
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Adicionado!',
+        text: 'Militar cadastrado com sucesso!',
+        timer: 2000,
+        showConfirmButton: false
+    });
 }
 
 function excluirMilitar(index) {
@@ -126,81 +158,100 @@ function excluirMilitar(index) {
     });
 }
 
-function editarMilitar(index) {
+async function editarMilitar(index) {
     const militares = carregarMilitares();
     militares.sort((a, b) => a.num - b.num);
     const militar = militares[index];
     
-    const novoNum = prompt('Número de Antiguidade:', militar.num);
-    const novoGrad = prompt('Graduação:', militar.grad);
-    const novoNome = prompt('Nome:', militar.nome);
-    const novoNomeCompleto = prompt('Nome Completo:', militar.nomeCompleto || militar.nome);
-    const novoId = prompt('ID Funcional:', militar.id);
-    
-    if (novoNum && novoGrad && novoNome && novoNomeCompleto && novoId) {
-        const numInt = parseInt(novoNum);
-        if (militares.some((m, i) => m.num === numInt && i !== index)) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro',
-                text: 'Já existe um militar com este número de antiguidade!',
-                confirmButtonColor: '#4a90e2'
-            });
-            return;
+    const result = await Swal.fire({
+        title: 'Editar Militar',
+        html: `
+            <div style="text-align: left; padding: 10px;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Graduação *</label>
+                    <input type="text" id="edit-grad" value="${militar.grad}" class="swal2-input" style="margin: 0; width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome (Nome de Guerra) *</label>
+                    <input type="text" id="edit-nome" value="${militar.nome}" class="swal2-input" style="margin: 0; width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Nome Completo</label>
+                    <input type="text" id="edit-nomeCompleto" value="${militar.nomeCompleto || ''}" class="swal2-input" style="margin: 0; width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">ID Funcional *</label>
+                    <input type="text" id="edit-id" value="${militar.id}" class="swal2-input" style="margin: 0; width: 100%;">
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#4a90e2',
+        preConfirm: () => {
+            const grad = document.getElementById('edit-grad').value.trim();
+            const nome = document.getElementById('edit-nome').value.trim().toUpperCase();
+            const nomeCompleto = document.getElementById('edit-nomeCompleto').value.trim().toUpperCase();
+            const id = document.getElementById('edit-id').value.trim();
+            
+            if (!grad || !nome || !id) {
+                Swal.showValidationMessage('Preencha os campos obrigatórios!');
+                return false;
+            }
+            
+            return { grad, nome, nomeCompleto: nomeCompleto || nome, id };
         }
-        
+    });
+    
+    if (result.isConfirmed && result.value) {
         const militaresOriginais = carregarMilitares();
         const indexOriginal = militaresOriginais.findIndex(m => 
             m.num === militar.num && m.nome === militar.nome
         );
         
         militaresOriginais[indexOriginal] = { 
-            num: numInt,
-            grad: novoGrad, 
-            nome: novoNome.toUpperCase(),
-            nomeCompleto: novoNomeCompleto.toUpperCase(),
-            id: novoId 
+            num: militar.num,
+            grad: result.value.grad, 
+            nome: result.value.nome,
+            nomeCompleto: result.value.nomeCompleto,
+            id: result.value.id 
         };
         salvarMilitares(militaresOriginais);
         renderizarTabela();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Atualizado!',
+            text: 'Militar atualizado com sucesso!',
+            timer: 2000,
+            showConfirmButton: false
+        });
     }
 }
 
 function resetarDados() {
     Swal.fire({
-        title: 'Resetar dados?',
-        text: 'Deseja resetar todos os dados para a lista padrão? Esta ação não pode ser desfeita!',
+        title: 'Limpar todos os militares?',
+        text: 'Deseja realmente excluir TODOS os militares cadastrados? Esta ação não pode ser desfeita!',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d9534f',
         cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Sim, resetar',
+        confirmButtonText: 'Sim, limpar tudo',
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-        localStorage.removeItem('militares');
-        salvarMilitares([
-            { num: 1, grad: 'SGT', nome: 'FILLMANN', nomeCompleto: 'DIOGO FERNANDES FILLMANN', id: '4359658' },
-            { num: 2, grad: 'SD', nome: 'MUCHA', nomeCompleto: 'PAULO RAFAEL MUCHA ANTUNES', id: '3147347' },
-            { num: 3, grad: 'SD', nome: 'IGOR', nomeCompleto: 'IGOR SZIMWELSKI MARTINS', id: '3702740' },
-            { num: 4, grad: 'SD', nome: 'PAIM', nomeCompleto: 'DOUGLAS PAIM DOS SANTOS', id: '3710998' },
-            { num: 5, grad: 'SD', nome: 'PENGO', nomeCompleto: 'RONIMAR DE MORAES PENGO', id: '3715990' },
-            { num: 6, grad: 'SD', nome: 'BITENCOURT', nomeCompleto: 'WILLIAM BITENCOURT FERNANDES', id: '4363779' },
-            { num: 7, grad: 'SD', nome: 'KELVIN', nomeCompleto: 'KELVIN SILVA SEVERO', id: '4516826' },
-            { num: 8, grad: 'SD', nome: 'FERRÃO', nomeCompleto: 'STEFANO LOPES FERRÃO', id: '4666771' },
-            { num: 9, grad: 'SD', nome: 'KOHLER', nomeCompleto: 'ERICSON KOHLER MORAES', id: '4665414' },
-            { num: 10, grad: 'SD', nome: 'JULIO', nomeCompleto: 'JULIO SAMUEL DA SILVA', id: '4764048' },
-            { num: 11, grad: 'SD', nome: 'KELI', nomeCompleto: 'KELI BARZOLA', id: '4764889' },
-            { num: 12, grad: '2°SGT', nome: 'HORTMANN', nomeCompleto: 'HORTMANN', id: '2323451' }
-        ]);
-        renderizarTabela();
-        Swal.fire({
-            icon: 'success',
-            title: 'Resetado!',
-            text: 'Dados resetados com sucesso!',
-            timer: 2000,
-            showConfirmButton: false
-        });
+            localStorage.removeItem('militares');
+            salvarMilitares([]);
+            renderizarTabela();
+            Swal.fire({
+                icon: 'success',
+                title: 'Limpo!',
+                text: 'Todos os militares foram removidos!',
+                timer: 2000,
+                showConfirmButton: false
+            });
         }
     });
 }
@@ -273,6 +324,103 @@ function salvarConfiguracoes() {
 
 function obterConfiguracoes() {
     return JSON.parse(localStorage.getItem('configuracoes')) || {};
+}
+
+// ========== EXPORTAR DADOS ==========
+
+function exportarDados() {
+    const dados = {
+        militares: localStorage.getItem('militares'),
+        configuracoes: localStorage.getItem('configuracoes'),
+        indisponiveis: {
+            folga: localStorage.getItem('indisponiveis_folga'),
+            ferias: localStorage.getItem('indisponiveis_ferias'),
+            le: localStorage.getItem('indisponiveis_le'),
+            ltip: localStorage.getItem('indisponiveis_ltip'),
+            lts: localStorage.getItem('indisponiveis_lts'),
+            adido: localStorage.getItem('indisponiveis_adido'),
+            rsp: localStorage.getItem('indisponiveis_rsp')
+        }
+    };
+    
+    const dataAtual = new Date();
+    const dataFormatada = dataAtual.toLocaleDateString('pt-BR').replace(/\//g, '-');
+    const horaFormatada = dataAtual.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+    const nomeArquivo = `sentinela-backup-${dataFormatada}-${horaFormatada}.json`;
+    
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nomeArquivo;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    Swal.fire({
+        icon: 'success',
+        title: 'Exportado!',
+        text: 'Dados exportados com sucesso!',
+        timer: 2000,
+        showConfirmButton: false
+    });
+}
+
+function importarDados(event) {
+    const arquivo = event.target.files[0];
+    if (!arquivo) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const dados = JSON.parse(e.target.result);
+            
+            Swal.fire({
+                title: 'Importar dados?',
+                html: 'Deseja realmente importar os dados? <br><strong style="color: #e74c3c;">Isso substituirá todos os dados atuais!</strong>',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4a90e2',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sim, importar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (dados.militares) localStorage.setItem('militares', dados.militares);
+                    if (dados.configuracoes) localStorage.setItem('configuracoes', dados.configuracoes);
+                    
+                    if (dados.indisponiveis) {
+                        if (dados.indisponiveis.folga) localStorage.setItem('indisponiveis_folga', dados.indisponiveis.folga);
+                        if (dados.indisponiveis.ferias) localStorage.setItem('indisponiveis_ferias', dados.indisponiveis.ferias);
+                        if (dados.indisponiveis.le) localStorage.setItem('indisponiveis_le', dados.indisponiveis.le);
+                        if (dados.indisponiveis.ltip) localStorage.setItem('indisponiveis_ltip', dados.indisponiveis.ltip);
+                        if (dados.indisponiveis.lts) localStorage.setItem('indisponiveis_lts', dados.indisponiveis.lts);
+                        if (dados.indisponiveis.adido) localStorage.setItem('indisponiveis_adido', dados.indisponiveis.adido);
+                        if (dados.indisponiveis.rsp) localStorage.setItem('indisponiveis_rsp', dados.indisponiveis.rsp);
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Importado!',
+                        text: 'Dados importados com sucesso! A página será recarregada.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
+            });
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Arquivo inválido ou corrompido!',
+                confirmButtonColor: '#d9534f'
+            });
+        }
+    };
+    
+    reader.readAsText(arquivo);
+    event.target.value = '';
 }
 
 // ========== MILITARES DISPONÍVEIS ==========
@@ -1513,10 +1661,6 @@ function migrarDadosAntigos() {
 
 window.onload = function() {
     migrarDadosAntigos();
-    
-    if (!localStorage.getItem('militares')) {
-        salvarMilitares(carregarMilitares());
-    }
     
     document.getElementById('dataEmissao').valueAsDate = new Date();
     document.getElementById('dataEscala').valueAsDate = new Date();

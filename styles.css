@@ -405,11 +405,20 @@ table td {
 table tbody tr {
     transition: all 0.3s ease;
     border-bottom: 1px solid rgba(42, 49, 80, 0.3);
+    cursor: move;
 }
 
 table tbody tr:hover {
     background: linear-gradient(90deg, rgba(6, 182, 212, 0.08) 0%, transparent 100%);
     transform: translateX(5px);
+}
+
+table tbody tr[draggable="true"] {
+    cursor: move;
+}
+
+table tbody tr.dragging {
+    opacity: 0.4;
 }
 
 table tr:last-child td {

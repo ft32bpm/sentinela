@@ -182,6 +182,13 @@
                 </div>
                 <button class="btn-action btn-success btn-wide" onclick="salvarConfiguracoes()" title="Salvar Configurações"><i data-lucide="save"></i> Salvar Configurações</button>
             </div>
+            
+            <div class="form-section">
+                <h2>Backup de Dados</h2>
+                <button class="btn-action btn-primary btn-wide" onclick="exportarDados()" title="Exportar Dados"><i data-lucide="download"></i> Exportar Todos os Dados</button>
+                <input type="file" id="importarArquivo" accept=".json" style="display: none;" onchange="importarDados(event)">
+                <button class="btn-action btn-secondary btn-wide" onclick="document.getElementById('importarArquivo').click()" title="Importar Dados"><i data-lucide="upload"></i> Importar Dados</button>
+            </div>
         </div>
 
         <!-- Seção Cadastro -->
@@ -191,11 +198,7 @@
             <div class="form-section">
                 <h2>Adicionar Novo Militar</h2>
                 <div class="form-group">
-                    <label>Nº Antiguidade:</label>
-                    <input type="number" id="numAntiguidade" placeholder="1, 2, 3..." min="1">
-                </div>
-                <div class="form-group">
-                    <label>Graduação:</label>
+                    <label>Graduação: <span style="color: #e74c3c;">*</span></label>
                     <select id="gradCadastro">
                         <option value="">Selecione</option>
                         <option value="CEL">CEL</option>
@@ -209,15 +212,15 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Nome:</label>
+                    <label>Nome (Nome de Guerra): <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="nomeCadastro" placeholder="Digite o nome de guerra">
                 </div>
                 <div class="form-group">
                     <label>Nome Completo:</label>
-                    <input type="text" id="nomeCompletoCadastro" placeholder="Digite o nome completo">
+                    <input type="text" id="nomeCompletoCadastro" placeholder="Digite o nome completo (opcional)">
                 </div>
                 <div class="form-group">
-                    <label>ID Funcional:</label>
+                    <label>ID Funcional: <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="idfuncCadastro" placeholder="Digite o ID">
                 </div>
                 <button class="btn-action btn-primary btn-wide" onclick="adicionarMilitarCadastro()" title="Adicionar Militar"><i data-lucide="user-plus"></i> Adicionar Militar</button>
@@ -225,7 +228,7 @@
 
             <div class="form-section">
                 <h2>Militares Cadastrados</h2>
-                <button class="btn-action btn-danger btn-wide" onclick="resetarDados()" title="Resetar para Dados Padrão"><i data-lucide="rotate-ccw"></i> Resetar para Dados Padrão</button>
+                <button class="btn-action btn-danger btn-wide" onclick="resetarDados()" title="Limpar Todos os Militares"><i data-lucide="trash-2"></i> Limpar Todos os Militares</button>
                 <div class="tabela-militares">
                     <table id="tabelaMilitares">
                         <thead>

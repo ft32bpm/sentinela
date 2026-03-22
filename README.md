@@ -28,9 +28,10 @@ Sistema web para geração de escalas de serviço da **Força Tática**, com exp
 - Botão **"Adicionar os Restantes"** preenche automaticamente o Intervalo de Escala com todos os militares ainda não alocados, ordenados por antiguidade
 
 ### Cadastro de Militares
-- Cadastro com: número de antiguidade, graduação, nome de guerra, nome completo e ID funcional
+- Cadastro com: graduação*, nome (nome de guerra)*, nome completo (opcional) e ID funcional*
 - Edição e exclusão individual
-- Opção de **resetar** para a lista padrão da unidade
+- Opção de **limpar todos** os militares cadastrados
+- Número de antiguidade atribuído automaticamente na ordem de cadastro
 
 ### Configurações
 - Nome do batalhão
