@@ -1272,7 +1272,7 @@ async function gerarPDF() {
     const batalhaoRodape = config.batalhao || '32º BPM';
     const textoAssinatura = config.textoAssinatura || `da Força Tática do ${batalhaoRodape}`;
     let auxiliarPelTexto = `Aux. Pel. ${textoAssinatura}`;
-    let comandanteTexto = `Rep comando ${textoAssinatura}`;
+    let comandanteTexto = `Rsp comando ${textoAssinatura}`;
     
     if (config.auxiliarPel) {
         const [grad, nomeCompleto] = config.auxiliarPel.split('|');
@@ -1304,7 +1304,7 @@ async function gerarPDF() {
     doc.setFont('times', 'bold');
     doc.text(comandanteTexto, 15, y);
     doc.setFont('times', 'normal');
-    doc.text(`Rep comando ${textoAssinatura}`, 15, y + 5);
+    doc.text(`Rsp comando ${textoAssinatura}`, 15, y + 5);
     
     // Gerar nome do arquivo com data e dia da semana
     const dataObj = new Date(dataEscala + 'T00:00:00');
