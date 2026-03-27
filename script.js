@@ -258,6 +258,192 @@ function resetarDados() {
 
 // ========== GERAÇÃO DE ESCALA ==========
 
+// ========== NOTAS DE ATUALIZAÇÕES ==========
+
+async function mostrarNotasAtualizacoes() {
+    // Mostrar popup de loading
+    Swal.fire({
+        title: '<i data-lucide="file-text"></i> Notas de Atualizações',
+        html: '<div class="loading-popup"><i data-lucide="loader-2" style="animation: spin 1s linear infinite;"></i><br><br>Carregando atualizações do GitHub...</div>',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        width: '700px',
+        background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+        color: 'var(--text-primary)',
+        didOpen: () => {
+            lucide.createIcons();
+        }
+    });
+    
+    try {
+        const response = await fetch('https://api.github.com/repos/ft32bpm/sentinela/releases');
+        
+        if (!response.ok) {
+            throw new Error(`Erro HTTP: ${response.status}`);
+        }
+        
+        const releases = await response.json();
+        
+        if (releases.length === 0) {
+            Swal.fire({
+                title: '<i data-lucide="file-text"></i> Notas de Atualizações',
+                html: '<div class="empty-popup"><i data-lucide="inbox"></i><br><br>Nenhuma atualização encontrada</div>',
+                confirmButtonText: 'Fechar',
+                confirmButtonColor: 'var(--accent-primary)',
+                width: '700px',
+                background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+                color: 'var(--text-primary)',
+                didOpen: () => {
+                    lucide.createIcons();
+                }
+            });
+            return;
+        }
+        
+        let htmlContent = '<div class="notas-popup-container">';
+        
+        // Buscar dados do commit para cada release
+        const releasesComCommit = await Promise.all(
+            releases.slice(0, 8).map(async (release) => {
+                try {
+                    // Buscar dados do commit associado à tag da release
+                    const commitResponse = await fetch(`https://api.github.com/repos/ft32bpm/sentinela/git/refs/tags/${release.tag_name}`);
+                    if (commitResponse.ok) {
+                        const tagData = await commitResponse.json();
+                        const commitSha = tagData.object.sha;
+                        
+                        // Buscar detalhes do commit
+                        const commitDetailResponse = await fetch(`https://api.github.com/repos/ft32bpm/sentinela/git/commits/${commitSha}`);
+                        if (commitDetailResponse.ok) {
+                            const commitDetail = await commitDetailResponse.json();
+                            return {
+                                ...release,
+                                commitDate: commitDetail.author.date
+                            };
+                        }
+                    }
+                } catch (error) {
+                    console.warn(`Não foi possível buscar commit para ${release.tag_name}:`, error);
+                }
+                // Fallback para a data de publicação da release
+                return {
+                    ...release,
+                    commitDate: release.published_at
+                };
+            })
+        );
+        
+        releasesComCommit.forEach((release, index) => {
+            const data = new Date(release.commitDate);
+            const dataFormatada = data.toLocaleDateString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const versao = release.name || release.tag_name;
+            const descricao = release.body || 'Sem descrição detalhada';
+            
+            // Usar ícones do Lucide baseado no índice
+            const icones = [
+                'zap',        // Raio - para atualizações importantes
+                'star',       // Estrela - para novos recursos
+                'rocket',     // Foguete - para melhorias de performance
+                'shield',     // Escudo - para correções de segurança
+                'wrench',     // Chave - para correções de bugs
+                'sparkles',   // Brilho - para melhorias visuais
+                'code',       // Código - para refatorações
+                'plus-circle' // Plus - para adições gerais
+            ];
+            const icone = icones[index] || 'git-commit';
+            
+            htmlContent += `
+                <div class="nota-popup-item">
+                    <div class="nota-popup-header">
+                        <div class="nota-popup-versao"><i data-lucide="${icone}"></i> ${versao}</div>
+                        <div class="nota-popup-data"><i data-lucide="calendar"></i> ${dataFormatada}</div>
+                    </div>
+                    <div class="nota-popup-descricao">${descricao}</div>
+                </div>
+            `;
+        });
+        
+        htmlContent += '</div>';
+        
+        // Mostrar popup com as notas
+        Swal.fire({
+            title: `<i data-lucide="file-text"></i> Notas de Atualizações <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">(${releasesComCommit.length} mais recentes)</span>`,
+            html: htmlContent,
+            confirmButtonText: '<i data-lucide="refresh-cw"></i> Atualizar Lista',
+            showCancelButton: true,
+            cancelButtonText: '<i data-lucide="x"></i> Fechar',
+            confirmButtonColor: 'var(--accent-primary)',
+            cancelButtonColor: 'var(--text-muted)',
+            width: '700px',
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+            color: 'var(--text-primary)',
+            showClass: {
+                popup: 'animate__animated animate__fadeInUp animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutDown animate__faster'
+            },
+            didOpen: () => {
+                lucide.createIcons();
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Recarregar as notas
+                mostrarNotasAtualizacoes();
+            }
+        });
+        
+    } catch (error) {
+        console.error('Erro ao carregar releases:', error);
+        
+        Swal.fire({
+            title: '<i data-lucide="alert-triangle"></i> Erro ao Carregar',
+            html: `
+                <div class="error-popup">
+                    <i data-lucide="wifi-off" style="width: 48px; height: 48px; margin-bottom: 16px;"></i><br>
+                    Não foi possível carregar as atualizações<br><br>
+                    <small style="color: var(--text-muted);">
+                        <i data-lucide="globe"></i> Verifique sua conexão com a internet<br>
+                        <i data-lucide="clock"></i> Tente novamente em alguns instantes
+                    </small>
+                </div>
+            `,
+            confirmButtonText: '<i data-lucide="refresh-cw"></i> Tentar Novamente',
+            showCancelButton: true,
+            cancelButtonText: '<i data-lucide="x"></i> Fechar',
+            confirmButtonColor: 'var(--danger)',
+            cancelButtonColor: 'var(--text-muted)',
+            width: '500px',
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+            color: 'var(--text-primary)',
+            didOpen: () => {
+                lucide.createIcons();
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                mostrarNotasAtualizacoes();
+            }
+        });
+    }
+}
+
+// Função auxiliar para animação de loading (CSS keyframes)
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
 // ========== CONFIGURAÇÕES ==========
 
 function carregarConfiguracoes() {
@@ -276,6 +462,10 @@ function carregarConfiguracoes() {
     if (config.textoAssinatura !== undefined) {
         textoAssinaturaInput.value = config.textoAssinatura;
     }
+    
+    // Carregar logo selecionada
+    const logoSelecionada = config.logoSelecionada || 'ft';
+    atualizarPreviewLogo(logoSelecionada);
     
     comandanteSelect.innerHTML = '<option value="">Selecione o Comandante</option>';
     auxiliarPelSelect.innerHTML = '<option value="">Selecione o Auxiliar Pel</option>';
@@ -311,7 +501,8 @@ function salvarConfiguracoes() {
         return;
     }
     
-    const config = { batalhao, textoAssinatura, comandante, auxiliarPel };
+    const logoSelecionada = obterLogoAtual();
+    const config = { batalhao, textoAssinatura, comandante, auxiliarPel, logoSelecionada };
     localStorage.setItem('configuracoes', JSON.stringify(config));
     Swal.fire({
         icon: 'success',
@@ -326,10 +517,62 @@ function obterConfiguracoes() {
     return JSON.parse(localStorage.getItem('configuracoes')) || {};
 }
 
+// ========== SELETOR DE LOGO ==========
+
+function trocarLogo(direcao) {
+    const logoAtual = obterLogoAtual();
+    const novaLogo = direcao === 'direita' ? 'ft' : 'bm';
+    
+    // Evitar trocar se já está na logo selecionada
+    if ((logoAtual === 'ft' && novaLogo === 'ft') || (logoAtual === 'bm' && novaLogo === 'bm')) {
+        return;
+    }
+    
+    atualizarPreviewLogo(novaLogo);
+}
+
+function obterLogoAtual() {
+    const preview = document.getElementById('logoPreview');
+    if (!preview || !preview.src) return 'ft';
+    // Verificar se contém "FT" no nome do arquivo
+    return preview.src.toUpperCase().includes('FT') ? 'ft' : 'bm';
+}
+
+function atualizarPreviewLogo(tipo) {
+    const preview = document.getElementById('logoPreview');
+    const nome = document.getElementById('logoNome');
+    const container = document.querySelector('.logo-preview-container');
+    
+    if (!preview || !nome || !container) return;
+    
+    container.classList.add(tipo === 'ft' ? 'slide-left' : 'slide-right');
+    
+    setTimeout(() => {
+        if (tipo === 'ft') {
+            preview.src = 'Logo FT PNG sem fundo.png';
+            nome.textContent = 'Força Tática';
+        } else {
+            preview.src = 'Logo BM PNG sem fundo.png';
+            nome.textContent = 'Brigada Militar';
+        }
+        container.classList.remove('slide-left', 'slide-right');
+    }, 150);
+}
+
 // ========== EXPORTAR DADOS ==========
 
 function exportarDados() {
+    const config = obterConfiguracoes();
+    const logoSelecionada = config.logoSelecionada || 'ft';
+    const logoTexto = logoSelecionada === 'ft' ? 'Força Tática' : 'Brigada Militar';
+    
     const dados = {
+        _info: {
+            sistema: 'Sentinela - Sistema de Escala de Serviço',
+            versao: '1.0',
+            dataExportacao: new Date().toISOString(),
+            logoSelecionada: logoTexto
+        },
         militares: localStorage.getItem('militares'),
         configuracoes: localStorage.getItem('configuracoes'),
         indisponiveis: {
@@ -1135,15 +1378,28 @@ async function gerarPDF() {
     }
     
     // Logo centralizada
+    const config = obterConfiguracoes();
+    const logoSelecionada = config.logoSelecionada || 'ft';
+    const logoPath = logoSelecionada === 'ft' ? 'Logo FT PNG sem fundo.png' : 'Logo BM PNG sem fundo.png';
+    
     const img = new Image();
-    img.src = 'Logo FT PNG sem fundo.png';
-    const imgWidth = 60;
-    const imgHeight = 35;
+    img.src = logoPath;
+    
+    // Definir dimensões mantendo proporção
+    let imgWidth, imgHeight;
+    if (logoSelecionada === 'ft') {
+        imgWidth = 60;
+        imgHeight = 35;
+    } else {
+        // Logo BM é mais quadrada, ajustar para manter proporção
+        imgHeight = 35;
+        imgWidth = 35; // Proporção 1:1 aproximadamente
+    }
+    
     const imgX = (210 - imgWidth) / 2;
     doc.addImage(img, 'PNG', imgX, 8, imgWidth, imgHeight);
     
     // Cabeçalho abaixo da logo
-    const config = obterConfiguracoes();
     const batalhao = config.batalhao || '32º BPM';
     doc.setFontSize(12);
     doc.setFont('times', 'bold');

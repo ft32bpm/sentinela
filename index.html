@@ -153,6 +153,15 @@
         <div id="secao-configuracoes" class="secao-oculta">
             <h1>Configurações</h1>
             
+            <!-- Botão de Salvar Destacado no Topo -->
+            <div class="save-config-container">
+                <button class="btn-save-config" onclick="salvarConfiguracoes()" title="Salvar Todas as Configurações">
+                    <i data-lucide="save"></i>
+                    <span>Salvar Configurações</span>
+                </button>
+                <p class="save-config-hint">Salva todas as alterações: Unidade, Logo do PDF e Força Tática</p>
+            </div>
+            
             <div class="form-section">
                 <h2>Unidade</h2>
                 <div class="form-group">
@@ -163,6 +172,17 @@
                     <label>Texto da Assinatura:</label>
                     <input type="text" id="textoAssinaturaInput" placeholder="Ex: da Força Tática do 32º BPM">
                     <small class="input-hint">Usado em: "Aux. Pel. [texto]" e "Rsp comando [texto]"</small>
+                </div>
+                <div class="form-group" style="flex-direction: column; align-items: center; gap: 10px;">
+                    <label style="min-width: auto;">Logo do PDF:</label>
+                    <div class="logo-selector">
+                        <button class="logo-nav-btn" onclick="trocarLogo('esquerda')" title="Logo BM"><i data-lucide="chevron-left"></i></button>
+                        <div class="logo-preview-container">
+                            <img id="logoPreview" src="Logo FT PNG sem fundo.png" alt="Logo Preview" class="logo-preview">
+                            <span id="logoNome" class="logo-nome">Força Tática</span>
+                        </div>
+                        <button class="logo-nav-btn" onclick="trocarLogo('direita')" title="Logo FT"><i data-lucide="chevron-right"></i></button>
+                    </div>
                 </div>
             </div>
             
@@ -180,7 +200,11 @@
                         <option value="">Selecione o Auxiliar Pel</option>
                     </select>
                 </div>
-                <button class="btn-action btn-success btn-wide" onclick="salvarConfiguracoes()" title="Salvar Configurações"><i data-lucide="save"></i> Salvar Configurações</button>
+            </div>
+            
+            <div class="form-section">
+                <h2>Notas de Atualizações</h2>
+                <button class="btn-action btn-info btn-wide" onclick="mostrarNotasAtualizacoes()" title="Ver Atualizações"><i data-lucide="file-text"></i> Ver Notas de Atualizações</button>
             </div>
             
             <div class="form-section">
@@ -212,7 +236,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Nome (Nome de Guerra): <span style="color: #e74c3c;">*</span></label>
+                    <label>Nome de Guerra: <span style="color: #e74c3c;">*</span></label>
                     <input type="text" id="nomeCadastro" placeholder="Digite o nome de guerra">
                 </div>
                 <div class="form-group">
