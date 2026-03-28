@@ -519,50 +519,31 @@ function obterConfiguracoes() {
 
 // ========== SELETOR DE LOGO ==========
 
-function trocarLogo(direcao) {
-    const logoAtual = obterLogoAtual();
-    const logos = ['ft', 'bm'];
-    const indexAtual = logos.indexOf(logoAtual);
+function selecionarLogo(tipo) {
+    const preview = document.getElementById('logoPreview');
+    if (!preview) return;
     
-    let novoIndex;
-    if (direcao === 'esquerda') {
-        // Navegar para trás (circular)
-        novoIndex = indexAtual === 0 ? logos.length - 1 : indexAtual - 1;
-    } else {
-        // Navegar para frente (circular)
-        novoIndex = indexAtual === logos.length - 1 ? 0 : indexAtual + 1;
-    }
+    // Atualizar preview
+    preview.style.opacity = '0';
+    setTimeout(() => {
+        preview.src = tipo === 'ft' ? 'Logo FT PNG sem fundo.png' : 'Logo BM PNG sem fundo.png';
+        preview.style.opacity = '1';
+    }, 150);
     
-    atualizarPreviewLogo(logos[novoIndex]);
+    // Atualizar seleção visual
+    document.querySelectorAll('.logo-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    document.querySelector(`.logo-item[data-logo="${tipo}"]`).classList.add('selected');
 }
 
 function obterLogoAtual() {
-    const preview = document.getElementById('logoPreview');
-    if (!preview || !preview.src) return 'ft';
-    // Verificar se contém "FT" no nome do arquivo
-    return preview.src.toUpperCase().includes('FT') ? 'ft' : 'bm';
+    const selected = document.querySelector('.logo-item.selected');
+    return selected ? selected.dataset.logo : 'ft';
 }
 
 function atualizarPreviewLogo(tipo) {
-    const preview = document.getElementById('logoPreview');
-    const nome = document.getElementById('logoNome');
-    
-    if (!preview || !nome) return;
-    
-    preview.style.opacity = '0';
-    nome.style.opacity = '0';
-    
-    setTimeout(() => {
-        if (tipo === 'ft') {
-            preview.src = 'Logo FT PNG sem fundo.png';
-            nome.textContent = 'Força Tática';
-        } else {
-            preview.src = 'Logo BM PNG sem fundo.png';
-            nome.textContent = 'Brigada Militar';
-        }
-        preview.style.opacity = '1';
-        nome.style.opacity = '1';
-    }, 200);
+    selecionarLogo(tipo);
 }
 
 // ========== EXPORTAR DADOS ==========

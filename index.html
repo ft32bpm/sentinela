@@ -177,13 +177,30 @@
             
             <div class="form-section">
                 <h2>Logo do PDF</h2>
-                <div class="logo-selector">
-                    <button class="logo-nav-btn" onclick="trocarLogo('esquerda')" title="Logo Anterior"><i data-lucide="chevron-left"></i></button>
-                    <div class="logo-preview-container">
-                        <img id="logoPreview" src="Logo FT PNG sem fundo.png" alt="Logo Preview" class="logo-preview">
-                        <span id="logoNome" class="logo-nome">Força Tática</span>
+                <div class="logo-selector-grid">
+                    <div class="logo-list">
+                        <div class="logo-item" data-logo="ft" onclick="selecionarLogo('ft')">
+                            <div class="logo-item-radio">
+                                <div class="radio-dot"></div>
+                            </div>
+                            <div class="logo-item-info">
+                                <span class="logo-item-title">Força Tática</span>
+                                <span class="logo-item-desc">Logo padrão da FT</span>
+                            </div>
+                        </div>
+                        <div class="logo-item" data-logo="bm" onclick="selecionarLogo('bm')">
+                            <div class="logo-item-radio">
+                                <div class="radio-dot"></div>
+                            </div>
+                            <div class="logo-item-info">
+                                <span class="logo-item-title">Brigada Militar</span>
+                                <span class="logo-item-desc">Logo oficial da BM</span>
+                            </div>
+                        </div>
                     </div>
-                    <button class="logo-nav-btn" onclick="trocarLogo('direita')" title="Próxima Logo"><i data-lucide="chevron-right"></i></button>
+                    <div class="logo-preview-box">
+                        <img id="logoPreview" src="Logo FT PNG sem fundo.png" alt="Logo Preview" class="logo-preview-img">
+                    </div>
                 </div>
             </div>
             
