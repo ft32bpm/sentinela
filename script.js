@@ -523,10 +523,7 @@ function trocarLogo(direcao) {
     const logoAtual = obterLogoAtual();
     const novaLogo = direcao === 'direita' ? 'ft' : 'bm';
     
-    // Evitar trocar se já está na logo selecionada
-    if ((logoAtual === 'ft' && novaLogo === 'ft') || (logoAtual === 'bm' && novaLogo === 'bm')) {
-        return;
-    }
+    if (logoAtual === novaLogo) return;
     
     atualizarPreviewLogo(novaLogo);
 }
@@ -541,11 +538,11 @@ function obterLogoAtual() {
 function atualizarPreviewLogo(tipo) {
     const preview = document.getElementById('logoPreview');
     const nome = document.getElementById('logoNome');
-    const container = document.querySelector('.logo-preview-container');
     
-    if (!preview || !nome || !container) return;
+    if (!preview || !nome) return;
     
-    container.classList.add(tipo === 'ft' ? 'slide-left' : 'slide-right');
+    preview.style.opacity = '0';
+    nome.style.opacity = '0';
     
     setTimeout(() => {
         if (tipo === 'ft') {
@@ -555,8 +552,9 @@ function atualizarPreviewLogo(tipo) {
             preview.src = 'Logo BM PNG sem fundo.png';
             nome.textContent = 'Brigada Militar';
         }
-        container.classList.remove('slide-left', 'slide-right');
-    }, 150);
+        preview.style.opacity = '1';
+        nome.style.opacity = '1';
+    }, 200);
 }
 
 // ========== EXPORTAR DADOS ==========
@@ -921,6 +919,7 @@ function adicionarMilitarViatura(viaturaId, _silent = false) {
     
     selectFuncao.onchange = () => {
         selectFuncao.dataset.manual = 'true';
+        selectFuncao.dataset.funcaoManual = selectFuncao.value;
         atualizarFuncoesViatura(viaturaId);
         markViaturaUnsaved(viaturaId);
     };
@@ -1229,11 +1228,12 @@ function atualizarFuncoesViatura(viaturaId) {
     militares.sort((a, b) => a.num - b.num);
     const total = militares.length;
 
-    // Salvar funções manuais ANTES de recriar as opções (chave = num de antiguidade)
+    // Salvar funções manuais ANTES de recriar as opções
     const manuais = {};
     militares.forEach(m => {
         if (m.funcaoSelect.dataset.manual === 'true') {
-            manuais[m.num] = m.funcaoSelect.dataset.funcaoManual || m.funcaoSelect.value;
+            const funcaoManual = m.funcaoSelect.dataset.funcaoManual || m.funcaoSelect.value;
+            manuais[m.num] = funcaoManual;
         }
     });
 
@@ -1249,14 +1249,23 @@ function atualizarFuncoesViatura(viaturaId) {
 
     militares.forEach((militar, idx) => {
         const select = militar.funcaoSelect;
+        const valorAtual = select.value;
+        
         select.innerHTML = '<option value="">Função</option>';
         funcoes.forEach(f => { select.innerHTML += `<option value="${f}">${f}</option>`; });
 
+        // Verificar se há função manual salva
         if (manuais[militar.num] !== undefined) {
             select.dataset.manual = 'true';
             select.dataset.funcaoManual = manuais[militar.num];
             select.value = manuais[militar.num];
+        } else if (select.dataset.manual === 'true' && valorAtual) {
+            // Preservar função manual mesmo se não estava em manuais
+            select.dataset.funcaoManual = valorAtual;
+            select.value = valorAtual;
         } else {
+            // Aplicar função automática
+            select.dataset.manual = 'false';
             select.value = funcaoAuto(idx);
         }
     });
@@ -1887,6 +1896,14 @@ function markIndisponivelUnsaved(tipo) {
     setSaveIndicator(getIndisponivelIndicator(tipo), 'unsaved');
 }
 
+// ========== SALVAR DATAS ==========
+
+function salvarDatas() {
+    const dataEmissao = document.getElementById('dataEmissao').value;
+    const dataEscala = document.getElementById('dataEscala').value;
+    localStorage.setItem('datas', JSON.stringify({ dataEmissao, dataEscala }));
+}
+
 // ========== INICIALIZAÇÃO ==========
 
 function mostrarAba(tipo) {
@@ -1918,8 +1935,26 @@ function migrarDadosAntigos() {
 window.onload = function() {
     migrarDadosAntigos();
     
-    document.getElementById('dataEmissao').valueAsDate = new Date();
-    document.getElementById('dataEscala').valueAsDate = new Date();
+    // Carregar datas salvas ou usar data atual
+    const datasSalvas = JSON.parse(localStorage.getItem('datas')) || {};
+    const dataEmissaoInput = document.getElementById('dataEmissao');
+    const dataEscalaInput = document.getElementById('dataEscala');
+    
+    if (datasSalvas.dataEmissao) {
+        dataEmissaoInput.value = datasSalvas.dataEmissao;
+    } else {
+        dataEmissaoInput.valueAsDate = new Date();
+    }
+    
+    if (datasSalvas.dataEscala) {
+        dataEscalaInput.value = datasSalvas.dataEscala;
+    } else {
+        dataEscalaInput.valueAsDate = new Date();
+    }
+    
+    // Salvar datas automaticamente ao alterar
+    dataEmissaoInput.addEventListener('change', salvarDatas);
+    dataEscalaInput.addEventListener('change', salvarDatas);
     
     // Carregar PRIMEIRO todos os indisponíveis
     carregarIndisponiveis('folga');
