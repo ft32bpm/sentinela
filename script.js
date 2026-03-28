@@ -521,11 +521,19 @@ function obterConfiguracoes() {
 
 function trocarLogo(direcao) {
     const logoAtual = obterLogoAtual();
-    const novaLogo = direcao === 'direita' ? 'ft' : 'bm';
+    const logos = ['ft', 'bm'];
+    const indexAtual = logos.indexOf(logoAtual);
     
-    if (logoAtual === novaLogo) return;
+    let novoIndex;
+    if (direcao === 'esquerda') {
+        // Navegar para trás (circular)
+        novoIndex = indexAtual === 0 ? logos.length - 1 : indexAtual - 1;
+    } else {
+        // Navegar para frente (circular)
+        novoIndex = indexAtual === logos.length - 1 ? 0 : indexAtual + 1;
+    }
     
-    atualizarPreviewLogo(novaLogo);
+    atualizarPreviewLogo(logos[novoIndex]);
 }
 
 function obterLogoAtual() {

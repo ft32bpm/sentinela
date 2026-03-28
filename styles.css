@@ -1528,8 +1528,9 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .logo-selector {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 20px;
-    padding: 20px;
+    padding: 30px 20px;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(51, 65, 85, 0.4) 100%);
     border-radius: 12px;
     border: 1px solid rgba(6, 182, 212, 0.3);
@@ -1573,17 +1574,22 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     padding: 20px;
     background: rgba(15, 23, 42, 0.8);
     border-radius: 10px;
     border: 2px solid rgba(6, 182, 212, 0.2);
     overflow: hidden;
+    min-height: 200px;
+    height: 200px;
 }
 
 .logo-preview {
-    height: 120px;
+    max-height: 120px;
+    max-width: 180px;
     width: auto;
+    height: auto;
     object-fit: contain;
     filter: drop-shadow(0 4px 15px rgba(6, 182, 212, 0.3));
     transition: opacity 0.2s ease;
@@ -1620,8 +1626,14 @@ input[type="time"]::-webkit-calendar-picker-indicator {
         height: 28px;
     }
     
+    .logo-preview-container {
+        min-height: 180px;
+        height: 180px;
+    }
+    
     .logo-preview {
-        height: 100px;
+        max-height: 100px;
+        max-width: 150px;
     }
     
     .logo-nome {

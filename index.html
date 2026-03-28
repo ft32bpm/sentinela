@@ -173,16 +173,17 @@
                     <input type="text" id="textoAssinaturaInput" placeholder="Ex: da Força Tática do 32º BPM">
                     <small class="input-hint">Usado em: "Aux. Pel. [texto]" e "Rsp comando [texto]"</small>
                 </div>
-                <div class="form-group" style="flex-direction: column; align-items: center; gap: 10px;">
-                    <label style="min-width: auto;">Logo do PDF:</label>
-                    <div class="logo-selector">
-                        <button class="logo-nav-btn" onclick="trocarLogo('esquerda')" title="Logo BM"><i data-lucide="chevron-left"></i></button>
-                        <div class="logo-preview-container">
-                            <img id="logoPreview" src="Logo FT PNG sem fundo.png" alt="Logo Preview" class="logo-preview">
-                            <span id="logoNome" class="logo-nome">Força Tática</span>
-                        </div>
-                        <button class="logo-nav-btn" onclick="trocarLogo('direita')" title="Logo FT"><i data-lucide="chevron-right"></i></button>
+            </div>
+            
+            <div class="form-section">
+                <h2>Logo do PDF</h2>
+                <div class="logo-selector">
+                    <button class="logo-nav-btn" onclick="trocarLogo('esquerda')" title="Logo Anterior"><i data-lucide="chevron-left"></i></button>
+                    <div class="logo-preview-container">
+                        <img id="logoPreview" src="Logo FT PNG sem fundo.png" alt="Logo Preview" class="logo-preview">
+                        <span id="logoNome" class="logo-nome">Força Tática</span>
                     </div>
+                    <button class="logo-nav-btn" onclick="trocarLogo('direita')" title="Próxima Logo"><i data-lucide="chevron-right"></i></button>
                 </div>
             </div>
             
