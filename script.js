@@ -1400,7 +1400,8 @@ async function gerarPDF() {
     const logoPath = logoSelecionada === 'ft' ? 'Logo FT PNG sem fundo.png' : 'Logo BM PNG sem fundo.png';
     
     const img = new Image();
-    img.src = logoPath;
+    img.crossOrigin = 'anonymous';
+    img.src = new URL(logoPath, window.location.href).href;
     
     // Definir dimensões mantendo proporção
     let imgWidth, imgHeight;
